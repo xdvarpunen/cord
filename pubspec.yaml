@@ -1,0 +1,39 @@
+name: cord
+description: A Flutter web app scaffold — a frontpage that links to several pages.
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ^3.4.0
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Web URL strategy (usePathUrlStrategy) — ships with the Flutter SDK.
+  flutter_web_plugins:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    # Libyco-Berber letterform images for the Tifinagh page (letters with no
+    # Unicode codepoint). CC0 — see assets/tifi/libyco_berber/SOURCE.txt.
+    - assets/tifi/libyco_berber/
+  fonts:
+    # Runic glyphs for the Futhark page's reference tables (Flutter web does
+    # not fall back to a system font for the Runic block). SIL OFL — see
+    # assets/furthak/OFL.txt.
+    - family: NotoSansRunic
+      fonts:
+        - asset: assets/furthak/NotoSansRunic-Regular.ttf
+    # Tifinagh glyphs for the Tifinagh page (recognized-letter readout +
+    # reference tables). SIL OFL — see assets/tifi/OFL.txt.
+    - family: NotoSansTifinagh
+      fonts:
+        - asset: assets/tifi/NotoSansTifinagh-Regular.ttf

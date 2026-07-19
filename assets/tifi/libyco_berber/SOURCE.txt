@@ -1,0 +1,38 @@
+Libyco-Berber letterform images
+================================
+
+These PNG letterform images are from Wikimedia Commons, category
+"Libyc characters" (https://commons.wikimedia.org/wiki/Category:Libyc_characters),
+created and uploaded by Commons user Aferghes on 2021-01-01, and released
+under the CC0 1.0 Universal Public Domain Dedication
+(https://creativecommons.org/publicdomain/zero/1.0/) — no attribution is
+legally required, but it's credited here as good practice.
+
+Files (local name -> original Commons filename):
+  b.png   -> LIBYAN LETTER B.png
+  d.png   -> LIBYAN LETTER D.png
+  f.png   -> LIBYAN LETTER F.png
+  g.png   -> LIBYAN LETTER G.png
+  h.png   -> LIBYAN LETTER H.png
+  k.png   -> LIBYAN LETTER K.png
+  l.png   -> LIBYAN LETTER L.png
+  m.png   -> LIBYAN LETTER M.png
+  n.png   -> LIBYAN LETTER N.png
+  q.png   -> LIBYAN LETTER Q.png
+  r.png   -> LIBYAN LETTER R.png
+  s1.png  -> LIBYAN LETTER S2.png
+  s2.png  -> LIBYAN LETTER S.png
+  s3.png  -> LIBYAN LETTER SHIN.png
+  s4.png  -> LIBYAN LETTER EMPHATIC S.png
+  t.png   -> LIBYAN LETTER T.png
+  tt.png  -> LIBYAN LETTER EMPHATIC T.png
+  w.png   -> LIBYAN LETTER W VERTICAL.png
+  y.png   -> LIBYAN LETTER Y.png
+  z1.png  -> LIBYAN LETTER Z2.png
+  z2.png  -> LIBYAN LETTER Z3.png
+  z3.png  -> LIBYAN LETTER Z1.png
+
+The letter/glyph mapping (transliteration per the Eastern/Dougga Libyco-
+Berber table) is per Wikipedia's "Libyco-Berber alphabet" article, citing
+Galand, Lionel (2002). Études de Linguistique Berbère. Peeters. pp. 13,
+15, 31.

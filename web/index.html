@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="cord — a small multi-page web app.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#1F6F6B">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- iOS: allow install to home screen as a standalone app -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="cord">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>cord</title>
+
+  <style>
+    /* A themed splash shown until Flutter takes over, so first paint
+       isn't a blank white flash (also matches the PWA theme_color). */
+    html, body { margin: 0; height: 100%; background: #1F6F6B; }
+    #splash {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #F5EFE0;
+      font: 600 20px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      letter-spacing: 0.08em;
+    }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #12403D; }
+    }
+  </style>
+</head>
+<body>
+  <div id="splash">cord</div>
+  <script>
+    // Remove the splash once Flutter's first frame has rendered.
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('splash');
+      if (s) s.remove();
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
