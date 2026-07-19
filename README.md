@@ -163,3 +163,9 @@ assets/
 web/                        # Flutter web bootstrap: index.html, manifest.json, icons
 .devcontainer/              # Dockerfile + devcontainer.json (Flutter + Chromium)
 ```
+
+## License
+
+Released under the [MIT License](LICENSE). Bundled fonts and assets keep their
+own licenses (NotoSans* under the SIL Open Font License; Libyco-Berber images
+CC0) — see the `assets/` subfolders.
