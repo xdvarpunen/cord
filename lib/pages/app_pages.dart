@@ -4,6 +4,7 @@ import '../etruscan/pages/etruscan_page.dart';
 import '../furthak/pages/futhark_page.dart';
 import '../morse/pages/morse_page.dart';
 import '../ogham/pages/ogham_page.dart';
+import '../suzhou/pages/suzhou_page.dart';
 import '../tally/pages/tally_page.dart';
 import '../tomtom/pages/tomtom_page.dart';
 import '../tartessian/pages/tartessian_page.dart';
@@ -100,5 +101,12 @@ final List<AppPage> appPages = [
     subtitle: 'Freehand Etruscan numeral recognition.',
     icon: Icons.pin,
     builder: (_) => const EtruscanPage(),
+  ),
+  AppPage(
+    route: '/suzhou',
+    title: 'Suzhou Numerals',
+    subtitle: 'Freehand Suzhou (huāmǎ) rod numeral recognition.',
+    icon: Icons.calculate,
+    builder: (_) => const SuzhouPage(),
   ),
 ];

@@ -20,6 +20,7 @@ or by deep link (desktop shows a reference table beside the canvas).
 | **Tom-Tom Code** | `/tomtom` | runs of ↑/↓ strokes; `—` separates letters |
 | **Tally Marks** | `/tally` | five tally systems (dropdown, `?system=`) |
 | **Etruscan Numerals** | `/etruscan` | 𐌠1 𐌡5 𐌢10 𐌣50 𐌟100 → additive total |
+| **Suzhou Numerals** | `/suzhou` | 〇 and 〡–〩 rod/*huāmǎ* digits |
 
 ## Architecture
 
