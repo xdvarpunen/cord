@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../etruscan/pages/etruscan_page.dart';
 import '../furthak/pages/futhark_page.dart';
+import '../hangul/pages/hangul_page.dart';
 import '../morse/pages/morse_page.dart';
 import '../ogham/pages/ogham_page.dart';
 import '../suzhou/pages/suzhou_page.dart';
@@ -108,5 +109,12 @@ final List<AppPage> appPages = [
     subtitle: 'Freehand Suzhou (huāmǎ) rod numeral recognition.',
     icon: Icons.calculate,
     builder: (_) => const SuzhouPage(),
+  ),
+  AppPage(
+    route: '/hangul',
+    title: 'Hangul',
+    subtitle: 'Freehand Hangul jamo (Korean letter) recognition.',
+    icon: Icons.translate,
+    builder: (_) => const HangulPage(),
   ),
 ];
