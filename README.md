@@ -22,6 +22,7 @@ or by deep link (desktop shows a reference table beside the canvas).
 | **Etruscan Numerals** | `/etruscan` | 𐌠1 𐌡5 𐌢10 𐌣50 𐌟100 → additive total |
 | **Suzhou Numerals** | `/suzhou` | 〇 and 〡–〩 rod/*huāmǎ* digits |
 | **Hangul** | `/hangul` | jamo: strokes, ticks, corners, loops, compounds |
+| **Hangul Grid** | `/hangul-grid` | whole syllables in notebook squares; each row read out |
 | **Hebrew** | `/hebrew` | modern square alef-bet + final forms (no Paleo-Hebrew) |
 
 ## Architecture

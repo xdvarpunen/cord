@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../etruscan/pages/etruscan_page.dart';
 import '../furthak/pages/futhark_page.dart';
 import '../hangul/pages/hangul_page.dart';
+import '../hangul_grid/pages/hangul_grid_page.dart';
 import '../hebrew/pages/hebrew_page.dart';
 import '../morse/pages/morse_page.dart';
 import '../ogham/pages/ogham_page.dart';
@@ -117,6 +118,13 @@ final List<AppPage> appPages = [
     subtitle: 'Freehand Hangul jamo (Korean letter) recognition.',
     icon: Icons.translate,
     builder: (_) => const HangulPage(),
+  ),
+  AppPage(
+    route: '/hangul-grid',
+    title: 'Hangul Grid',
+    subtitle: 'Whole Hangul syllables in notebook squares, each row read out.',
+    icon: Icons.grid_on,
+    builder: (_) => const HangulGridPage(),
   ),
   AppPage(
     route: '/hebrew',
