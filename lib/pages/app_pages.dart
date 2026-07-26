@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../cyrillic/pages/cyrillic_page.dart';
 import '../etruscan/pages/etruscan_page.dart';
 import '../furthak/pages/futhark_page.dart';
 import '../hangul/pages/hangul_page.dart';
@@ -133,6 +134,13 @@ final List<AppPage> appPages = [
     subtitle: 'Whole Han characters in notebook squares, each row read out.',
     icon: Icons.border_all,
     builder: (_) => const HanziGridPage(),
+  ),
+  AppPage(
+    route: '/cyrillic',
+    title: 'Cyrillic',
+    subtitle: 'Freehand Cyrillic letter recognition (Russian alphabet).',
+    icon: Icons.translate,
+    builder: (_) => const CyrillicPage(),
   ),
   AppPage(
     route: '/hebrew',
