@@ -23,6 +23,7 @@ or by deep link (desktop shows a reference table beside the canvas).
 | **Suzhou Numerals** | `/suzhou` | 〇 and 〡–〩 rod/*huāmǎ* digits |
 | **Hangul** | `/hangul` | jamo: strokes, ticks, corners, loops, compounds |
 | **Hangul Grid** | `/hangul-grid` | whole syllables in notebook squares; each row read out |
+| **Hanzi Grid** | `/hanzi` | whole Han characters in 米-ruled squares (script dropdown, `?script=`); pinyin + English + confidence, and whose stroke order you used |
 | **Hebrew** | `/hebrew` | modern square alef-bet + final forms (no Paleo-Hebrew) |
 
 ## Architecture
@@ -36,7 +37,8 @@ or by deep link (desktop shows a reference table beside the canvas).
   `app_pages.dart`, `home_page.dart`, `search_page.dart`).
 - **Engine** — a `Ticker` game loop repaints a stack of `Layer`s: a dot-grid
   `PaperLayer` under a recognizer that captures strokes and paints the readout.
-- Fonts are bundled only for Futhark/Tifinagh; the rest draw glyphs as vectors.
+- Fonts are bundled only for Futhark/Tifinagh; the rest draw glyphs as vectors
+  or lean on the browser's CJK/Hebrew fallbacks.
   Clean paths (`usePathUrlStrategy`) + a full PWA manifest.
 
 **Add a feature:** create `lib/<feature>/` (copy an existing one's `engine/`,
@@ -64,4 +66,8 @@ on deep-link/refresh on a static host.
 ## License
 
 [MIT](LICENSE). Bundled fonts/assets keep their own licenses (NotoSans* under
-OFL; Libyco-Berber images CC0).
+OFL; Libyco-Berber images CC0). Hanzi Grid's stroke table is generated from
+makemeahanzi, KanjiVG and animCJK, and its readings/meanings from
+makemeahanzi's dictionary (CC BY-SA 4.0, share-alike) — see
+[`lib/hanzi/data/NOTICE.txt`](lib/hanzi/data/NOTICE.txt). Regenerate the
+glosses with `node tool/hanzi_glosses.mjs` (host, needs network).

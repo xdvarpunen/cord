@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../hanzi/data/hanzi_scripts.dart';
+import '../hanzi/pages/hanzi_grid_page.dart';
 import '../tally/data/tally_systems.dart';
 import '../tally/pages/tally_page.dart';
 import 'app_pages.dart';
@@ -43,11 +45,12 @@ class SearchEntry {
 }
 
 /// Everything the search page lists: each page (except search itself), then
-/// every tally system (the Tally page's dropdown content). Built from the
-/// same registries the rest of the app uses, so search never goes stale.
+/// every tally system and every Hanzi Grid script — the two pages that have
+/// dropdown content of their own. Built from the same registries the rest of
+/// the app uses, so search never goes stale.
 ///
 /// A future page with its own dropdown content adds its items here the same
-/// way the tally systems do.
+/// way these two do.
 List<SearchEntry> buildSearchIndex() => [
       for (final page in appPages)
         if (page.route != '/search')
@@ -67,4 +70,17 @@ List<SearchEntry> buildSearchIndex() => [
           keywords: '${system.slug} tally marks ${system.region}',
           builder: (_) => TallyPage(initialSystem: system.slug),
         ),
+      // "Everything" is skipped: it is what `/hanzi` already opens on, so a
+      // row for it would just duplicate the page's own entry above.
+      for (final script in hanziScripts)
+        if (script.slug != 'all')
+          SearchEntry(
+            title: script.name,
+            subtitle: 'Hanzi Grid · ${script.count} characters',
+            route: '/hanzi',
+            icon: Icons.border_all,
+            keywords: '${script.slug} hanzi han kanji hanja cjk characters '
+                'stroke order grid',
+            builder: (_) => HanziGridPage(initialScript: script.slug),
+          ),
     ];
