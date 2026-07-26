@@ -4,6 +4,7 @@ import '../etruscan/pages/etruscan_page.dart';
 import '../furthak/pages/futhark_page.dart';
 import '../hangul/pages/hangul_page.dart';
 import '../hangul_grid/pages/hangul_grid_page.dart';
+import '../hanzi/pages/hanzi_grid_page.dart';
 import '../hebrew/pages/hebrew_page.dart';
 import '../morse/pages/morse_page.dart';
 import '../ogham/pages/ogham_page.dart';
@@ -125,6 +126,13 @@ final List<AppPage> appPages = [
     subtitle: 'Whole Hangul syllables in notebook squares, each row read out.',
     icon: Icons.grid_on,
     builder: (_) => const HangulGridPage(),
+  ),
+  AppPage(
+    route: '/hanzi',
+    title: 'Hanzi Grid',
+    subtitle: 'Whole Han characters in notebook squares, each row read out.',
+    icon: Icons.border_all,
+    builder: (_) => const HanziGridPage(),
   ),
   AppPage(
     route: '/hebrew',
