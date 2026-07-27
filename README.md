@@ -26,6 +26,7 @@ or by deep link (desktop shows a reference table beside the canvas).
 | **Hanzi Grid** | `/hanzi` | whole Han characters in 米-ruled squares (script dropdown, `?script=`); pinyin + English + confidence, and whose stroke order you used |
 | **Hebrew** | `/hebrew` | modern square alef-bet + final forms (no Paleo-Hebrew) |
 | **Cyrillic** | `/cyrillic` | printed Russian capitals, all 33 (Ё = Е + two taps) |
+| **Latin** | `/latin` | printed capitals + their marks — 111 letters over 31 alphabets (dropdown, `?alphabet=`) |
 
 ## Architecture
 
@@ -39,7 +40,7 @@ or by deep link (desktop shows a reference table beside the canvas).
 - **Engine** — a `Ticker` game loop repaints a stack of `Layer`s: a dot-grid
   `PaperLayer` under a recognizer that captures strokes and paints the readout.
 - Fonts are bundled only for Futhark/Tifinagh; the rest draw glyphs as vectors
-  or lean on the browser's CJK/Hebrew/Cyrillic fallbacks.
+  or lean on the browser's CJK/Hebrew/Cyrillic/Latin fallbacks.
   Clean paths (`usePathUrlStrategy`) + a full PWA manifest.
 
 **Add a feature:** create `lib/<feature>/` (copy an existing one's `engine/`,

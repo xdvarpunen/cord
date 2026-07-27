@@ -7,6 +7,7 @@ import '../hangul/pages/hangul_page.dart';
 import '../hangul_grid/pages/hangul_grid_page.dart';
 import '../hanzi/pages/hanzi_grid_page.dart';
 import '../hebrew/pages/hebrew_page.dart';
+import '../latin/pages/latin_page.dart';
 import '../morse/pages/morse_page.dart';
 import '../ogham/pages/ogham_page.dart';
 import '../suzhou/pages/suzhou_page.dart';
@@ -148,5 +149,12 @@ final List<AppPage> appPages = [
     subtitle: 'Freehand Hebrew letter recognition (modern square script).',
     icon: Icons.translate,
     builder: (_) => const HebrewPage(),
+  ),
+  AppPage(
+    route: '/latin',
+    title: 'Latin',
+    subtitle: 'Freehand Latin letter recognition across 31 alphabets.',
+    icon: Icons.abc,
+    builder: (_) => const LatinPage(),
   ),
 ];

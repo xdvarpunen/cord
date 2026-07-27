@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../hanzi/data/hanzi_scripts.dart';
 import '../hanzi/pages/hanzi_grid_page.dart';
+import '../latin/data/latin_letters.dart';
+import '../latin/pages/latin_page.dart';
 import '../tally/data/tally_systems.dart';
 import '../tally/pages/tally_page.dart';
 import 'app_pages.dart';
@@ -45,12 +47,12 @@ class SearchEntry {
 }
 
 /// Everything the search page lists: each page (except search itself), then
-/// every tally system and every Hanzi Grid script — the two pages that have
-/// dropdown content of their own. Built from the same registries the rest of
-/// the app uses, so search never goes stale.
+/// every tally system, every Hanzi Grid script and every Latin alphabet — the
+/// three pages that have dropdown content of their own. Built from the same
+/// registries the rest of the app uses, so search never goes stale.
 ///
 /// A future page with its own dropdown content adds its items here the same
-/// way these two do.
+/// way these three do.
 List<SearchEntry> buildSearchIndex() => [
       for (final page in appPages)
         if (page.route != '/search')
@@ -83,4 +85,19 @@ List<SearchEntry> buildSearchIndex() => [
                 'stroke order grid',
             builder: (_) => HanziGridPage(initialScript: script.slug),
           ),
+      // None is skipped, unlike Hanzi Grid's "Everything" above: the Latin page
+      // opens on English, but "English" is a term someone would search for, and
+      // the alphabet called Latin (the classical 23) is a different thing from
+      // the page called Latin. Both earn their row.
+      for (final alphabet in Alphabet.values)
+        SearchEntry(
+          title: alphabet.label,
+          subtitle:
+              'Latin · ${alphabet.rows.length} letters · ${alphabet.note}',
+          route: '/latin',
+          icon: Icons.abc,
+          keywords:
+              '${alphabet.name} latin alphabet letters ${alphabet.letters}',
+          builder: (_) => LatinPage(initialAlphabet: alphabet.name),
+        ),
     ];
