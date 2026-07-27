@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+// Greek has an `Alphabet` of its own, wholly unrelated to Latin's, and the two
+// features share nothing — so it comes in under a prefix rather than one of
+// them being renamed to suit this file.
+import '../greek/data/greek_letters.dart' as greek;
+import '../greek/pages/greek_page.dart';
 import '../hanzi/data/hanzi_scripts.dart';
 import '../hanzi/pages/hanzi_grid_page.dart';
 import '../latin/data/latin_letters.dart';
@@ -47,12 +52,13 @@ class SearchEntry {
 }
 
 /// Everything the search page lists: each page (except search itself), then
-/// every tally system, every Hanzi Grid script and every Latin alphabet — the
-/// three pages that have dropdown content of their own. Built from the same
-/// registries the rest of the app uses, so search never goes stale.
+/// every tally system, every Hanzi Grid script, every Latin alphabet and every
+/// Greek one — the four pages that have dropdown content of their own. Built
+/// from the same registries the rest of the app uses, so search never goes
+/// stale.
 ///
 /// A future page with its own dropdown content adds its items here the same
-/// way these three do.
+/// way these four do.
 List<SearchEntry> buildSearchIndex() => [
       for (final page in appPages)
         if (page.route != '/search')
@@ -99,5 +105,20 @@ List<SearchEntry> buildSearchIndex() => [
           keywords:
               '${alphabet.name} latin alphabet letters ${alphabet.letters}',
           builder: (_) => LatinPage(initialAlphabet: alphabet.name),
+        ),
+      // None is skipped here either, and for the same reason as Latin's: the
+      // page opens on the classical 24, but "Greek" names both the page and
+      // that one alphabet of the three, and the other two are what someone
+      // searching "Old Attic" or "archaic" is after.
+      for (final alphabet in greek.Alphabet.values)
+        SearchEntry(
+          title: alphabet.label,
+          subtitle:
+              'Greek · ${alphabet.rows.length} letters · ${alphabet.note}',
+          route: '/greek',
+          icon: Icons.translate,
+          keywords:
+              '${alphabet.name} greek alphabet letters ${alphabet.letters}',
+          builder: (_) => GreekPage(initialAlphabet: alphabet.name),
         ),
     ];

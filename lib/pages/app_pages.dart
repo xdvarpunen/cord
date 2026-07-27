@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../cyrillic/pages/cyrillic_page.dart';
 import '../etruscan/pages/etruscan_page.dart';
 import '../furthak/pages/futhark_page.dart';
+import '../greek/pages/greek_page.dart';
 import '../hangul/pages/hangul_page.dart';
 import '../hangul_grid/pages/hangul_grid_page.dart';
 import '../hanzi/pages/hanzi_grid_page.dart';
@@ -156,5 +157,12 @@ final List<AppPage> appPages = [
     subtitle: 'Freehand Latin letter recognition across 31 alphabets.',
     icon: Icons.abc,
     builder: (_) => const LatinPage(),
+  ),
+  AppPage(
+    route: '/greek',
+    title: 'Greek',
+    subtitle: 'Freehand Greek letter recognition, classical to archaic.',
+    icon: Icons.translate,
+    builder: (_) => const GreekPage(),
   ),
 ];
