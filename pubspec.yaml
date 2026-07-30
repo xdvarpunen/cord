@@ -25,6 +25,10 @@ flutter:
     # Libyco-Berber letterform images for the Tifinagh page (letters with no
     # Unicode codepoint). CC0 — see assets/tifi/libyco_berber/SOURCE.txt.
     - assets/tifi/libyco_berber/
+    # The Makasar and Lontara letterforms as drawn, shown at the head of every
+    # row of the Makasar page's reference (see GlyphImage) — the only rendering
+    # there is of the Lontara ones, no bundled font covering the Buginese block.
+    - assets/makasar/glyphs/
   fonts:
     # Runic glyphs for the Futhark page's reference tables (Flutter web does
     # not fall back to a system font for the Runic block). SIL OFL — see
@@ -37,3 +41,8 @@ flutter:
     - family: NotoSansTifinagh
       fonts:
         - asset: assets/tifi/NotoSansTifinagh-Regular.ttf
+    # Makasar glyphs for the Makasar page (recognized-character readout +
+    # reference table). SIL OFL — see assets/makasar/OFL.txt.
+    - family: NotoSerifMakasar
+      fonts:
+        - asset: assets/makasar/NotoSerifMakasar-Regular.ttf

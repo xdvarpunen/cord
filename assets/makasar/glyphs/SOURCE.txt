@@ -1,0 +1,28 @@
+Makasar and Lontara letterform images
+=====================================
+
+The 49 PNGs here are the letterforms as drawn (black strokes on
+transparency), shown at the head of every row of the Makasar page's
+reference table:
+
+  mak_*.png   (20)  the Makasar letters, passimbang and end-of-section sign
+  lon_*.png   (25)  their Lontara (Bugis) counterparts, pallawa and
+                    end-of-section sign
+  sign_*.png   (5)  the vowel marks, on a dotted circle — four of the five
+                    are the same mark in the same place in both scripts,
+                    which is why one set serves both tables
+
+They come from the images in Wikipedia's "Makasar script" article, which
+sets the two scripts side by side; on Wikimedia Commons the files are named
+`Mak ka.png` / `Lon ka.png` and so on (PNG — there is no vector original).
+They were lifted out of a saved copy of that article by the upstream
+`makasar` project's `tool/glyphcopy.sh`, which is that project's provenance
+record and holds the full Commons-name -> local-name mapping. The vowel-sign
+files are its `lon_sign_*` output renamed `sign_*`, both scripts' tables
+using them.
+
+Note: the individual Commons licences of these files were NOT verified when
+they were ported into cord — check them before redistributing this directory
+on its own. The rest of the Makasar feature's bundle is clear: the
+`NotoSerifMakasar-Regular.ttf` beside it is under the SIL Open Font License
+(see ../OFL.txt).

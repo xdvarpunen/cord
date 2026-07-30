@@ -28,6 +28,7 @@ or by deep link (desktop shows a reference table beside the canvas).
 | **Cyrillic** | `/cyrillic` | printed Russian capitals, all 33 (Ё = Е + two taps) |
 | **Latin** | `/latin` | printed capitals + their marks — 111 letters over 31 alphabets (dropdown, `?alphabet=`) |
 | **Greek** | `/greek` | capitals Α–Ω, plus Ϝ and Ϙ — 3 alphabets by date (dropdown, `?alphabet=`) |
+| **Makasar** | `/makasar` | South Sulawesi abugida — one letter (Draw) or a whole row (Write); Makasar or Bugis/Lontara (dropdown, `?script=`) · `NotoSerifMakasar` + images |
 
 ## Architecture
 
@@ -40,8 +41,8 @@ or by deep link (desktop shows a reference table beside the canvas).
   `app_pages.dart`, `home_page.dart`, `search_page.dart`).
 - **Engine** — a `Ticker` game loop repaints a stack of `Layer`s: a dot-grid
   `PaperLayer` under a recognizer that captures strokes and paints the readout.
-- Fonts are bundled only for Futhark/Tifinagh; the rest draw glyphs as vectors
-  or lean on the browser's CJK/Hebrew/Cyrillic/Latin/Greek fallbacks.
+- Fonts are bundled only for Futhark/Tifinagh/Makasar; the rest draw glyphs as
+  vectors or lean on the browser's CJK/Hebrew/Cyrillic/Latin/Greek fallbacks.
   Clean paths (`usePathUrlStrategy`) + a full PWA manifest.
 
 **Add a feature:** create `lib/<feature>/` (copy an existing one's `engine/`,
@@ -68,8 +69,10 @@ on deep-link/refresh on a static host.
 
 ## License
 
-[MIT](LICENSE). Bundled fonts/assets keep their own licenses (NotoSans* under
-OFL; Libyco-Berber images CC0). Hanzi Grid's stroke table is generated from
+[MIT](LICENSE). Bundled fonts/assets keep their own licenses (Noto* fonts under
+OFL; Libyco-Berber images CC0; the Makasar/Lontara letterform images come from
+Wikipedia's "Makasar script" article — provenance and an unverified-licence
+caveat in [`assets/makasar/glyphs/SOURCE.txt`](assets/makasar/glyphs/SOURCE.txt)). Hanzi Grid's stroke table is generated from
 makemeahanzi, KanjiVG and animCJK, and its readings/meanings from
 makemeahanzi's dictionary (CC BY-SA 4.0, share-alike) — see
 [`lib/hanzi/data/NOTICE.txt`](lib/hanzi/data/NOTICE.txt). Regenerate the

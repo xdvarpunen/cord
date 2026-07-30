@@ -9,6 +9,7 @@ import '../hangul_grid/pages/hangul_grid_page.dart';
 import '../hanzi/pages/hanzi_grid_page.dart';
 import '../hebrew/pages/hebrew_page.dart';
 import '../latin/pages/latin_page.dart';
+import '../makasar/pages/makasar_page.dart';
 import '../morse/pages/morse_page.dart';
 import '../ogham/pages/ogham_page.dart';
 import '../suzhou/pages/suzhou_page.dart';
@@ -164,5 +165,12 @@ final List<AppPage> appPages = [
     subtitle: 'Freehand Greek letter recognition, classical to archaic.',
     icon: Icons.translate,
     builder: (_) => const GreekPage(),
+  ),
+  AppPage(
+    route: '/makasar',
+    title: 'Makasar',
+    subtitle: 'Freehand Makasar letter and syllable writing (South Sulawesi).',
+    icon: Icons.draw,
+    builder: (_) => const MakasarPage(),
   ),
 ];
