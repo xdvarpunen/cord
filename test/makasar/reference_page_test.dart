@@ -8,7 +8,7 @@ import 'package:cord/makasar/widgets/glyph_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Upstream `makasar`'s `test/reference_page_test.dart`. The page takes the
+/// Upstream `lontara`'s `test/reference_page_test.dart`. The page takes the
 /// script it shows as a parameter here rather than carrying a dropdown of its
 /// own — cord's page has one already — so what upstream reached by tapping
 /// that dropdown is reached by pumping the other script instead.
@@ -21,7 +21,7 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('the Makasar table gives one drawn letterform per row',
+    testWidgets('the Old Lontara table gives one drawn letterform per row',
         (tester) async {
       await open(tester, WritingScript.makasar);
 
@@ -33,12 +33,12 @@ void main() {
             makasarVowelSigns.length +
             makasarOtherSigns.length),
       );
-      expect(find.text('Makasar script reference'), findsOneWidget);
+      expect(find.text('Old Lontara script reference'), findsOneWidget);
       expect(find.text('Letterform'), findsOneWidget);
       expect(find.text('Notes'), findsNothing);
     });
 
-    testWidgets('the Bugis table names what each letter lines up with',
+    testWidgets('the New Lontara table names what each letter lines up with',
         (tester) async {
       await open(tester, WritingScript.bugis);
 
@@ -48,7 +48,7 @@ void main() {
             lontaraVowelSigns.length +
             lontaraOtherSigns.length),
       );
-      // Lontara rows show a codepoint rather than the character — nothing in
+      // New Lontara rows show a codepoint rather than the character — nothing in
       // the bundle renders the Buginese block.
       expect(find.text('U+1A00'), findsOneWidget);
       // The Notes column says what to draw once a letter can be drawn…
@@ -57,12 +57,13 @@ void main() {
           expect(find.text(letter.shape!), findsOneWidget, reason: letter.name);
         }
       }
-      // …and otherwise names what it lines up with in Makasar, or says it
+      // …and otherwise names what it lines up with in Old Lontara, or says it
       // lines up with nothing — the prenasalized series (ngka, mpa, nra, nca)
       // plus ha, less any of them that has a shape by now.
       final unmatched = lontaraLetters.where(
           (letter) => letter.makasarName == null && letter.shape == null);
-      expect(find.text('no Makasar letter'), findsNWidgets(unmatched.length));
+      expect(
+          find.text('no Old Lontara letter'), findsNWidgets(unmatched.length));
       expect(find.text('Notes'), findsOneWidget);
       expect(find.text('Letterform'), findsNothing);
     });

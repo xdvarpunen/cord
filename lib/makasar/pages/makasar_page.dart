@@ -1,34 +1,43 @@
 import 'package:flutter/material.dart';
 
+import '../data/canvas_mode.dart';
 import '../data/script.dart';
 import '../engine/game_canvas.dart';
 import '../engine/scene.dart';
 import '../scenes/makasar_scene.dart';
 import '../scenes/writing_scene.dart';
+import '../widgets/lontara_wordmark.dart';
 import 'makasar_reference.dart';
 import 'reference_page.dart';
 import 'script_param.dart';
 
-/// Freehand Makasar letter recognition, ported from the standalone `makasar`
-/// project and self-contained under `lib/makasar/` — it shares no engine/
+/// Freehand Lontara letter recognition, ported from the standalone `lontara`
+/// project (which still calls its code `makasar`, after the older of the two
+/// scripts) and self-contained under `lib/makasar/` — it shares no engine/
 /// scene/data with the other script features.
 ///
-/// Two tabs over the same canvas engine:
+/// Two canvases over the same engine, picked by the **Canvas** dropdown
+/// ([CanvasMode]):
 ///
 /// - **Draw** — one character at a time on dot-grid paper, with the reading
 ///   of what it was recognized as on the canvas itself.
 /// - **Write** — ruled paper for a whole row of characters, each read on its
 ///   own and the row read out together.
 ///
-/// A dropdown picks the script, and points both canvases at it as well as the
-/// reference: a wedge drawn under Bugis reads as its own ta rather than as
-/// the Makasar letter na. Unlike the Latin and Greek pages' alphabet
-/// selectors, this one *wipes* both canvases on a change (the scene layers
-/// do it themselves) — a reading taken as one script wouldn't mean anything
-/// under the other.
+/// Either way the reading is drawn out in letterforms underneath it, which
+/// for New Lontara is the only picture of the character there is — no font in
+/// the bundle covers the Buginese block.
 ///
-/// The selection round-trips through the URL's `?script=` query param (like
-/// the Hanzi Grid page's), so reloading or sharing the page URL preserves it.
+/// The **Script** dropdown picks which script is read and listed, and points
+/// both canvases at it as well as the reference: a wedge drawn under New
+/// Lontara reads as its own ta rather than as Old Lontara's na. Unlike the
+/// Latin and Greek pages' alphabet selectors, this one *wipes* both canvases
+/// on a change (the scene layers do it themselves) — a reading taken as one
+/// script wouldn't mean anything under the other.
+///
+/// The page opens on New Lontara, the script still written today; the
+/// selection round-trips through the URL's `?script=` query param (like the
+/// Hanzi Grid page's), so reloading or sharing the page URL preserves it.
 ///
 /// On **desktop** (wide) the script reference sits beside the canvas in a
 /// 50/50 split. On narrow/mobile an info button in the app bar opens the
@@ -52,25 +61,33 @@ class MakasarPage extends StatefulWidget {
 /// behind the app-bar info button.
 const _wideBreakpoint = 720.0;
 
-/// The script [slug] names, or [WritingScript.makasar] if it names none — the
-/// enum's own [WritingScript.name] is the slug, so `?script=bugis` is
-/// [WritingScript.bugis] and nothing has to be kept in step by hand.
+/// The script [slug] names, or [WritingScript.bugis] if it names none — the
+/// enum's own [WritingScript.name] is the slug, so `?script=makasar` is
+/// [WritingScript.makasar] and nothing has to be kept in step by hand. The
+/// slugs are the scripts' older names, as the code is: New Lontara is
+/// `?script=bugis`.
+///
+/// New Lontara is the default because it is the script still in use — Old
+/// Lontara is the one you go looking for. (Upstream opens on Old Lontara
+/// instead, its code being named after it.)
 WritingScript scriptForSlug(String? slug) => WritingScript.values.firstWhere(
   (script) => script.name == slug,
-  orElse: () => WritingScript.makasar,
+  orElse: () => WritingScript.bugis,
 );
 
-class _MakasarPageState extends State<MakasarPage>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: 2, vsync: this);
-
+class _MakasarPageState extends State<MakasarPage> {
   late final (Scene, MakasarLayer) _drawing = buildMakasarScene();
   late final _drawingManager = SceneManager(_drawing.$1);
   late final (Scene, WritingLayer) _writing = buildWritingScene();
   late final _writingManager = SceneManager(_writing.$1);
 
+  /// Which canvas is showing. Both scenes are built either way — each keeps
+  /// what was drawn on it, so switching across and back leaves the work where
+  /// it was.
+  CanvasMode _mode = CanvasMode.draw;
+
   /// Which script both canvases read and the reference lists. Shared by the
-  /// two tabs — see [_select].
+  /// two — see [_select].
   late WritingScript _script = scriptForSlug(
     widget.initialScript ?? Uri.base.queryParameters['script'],
   );
@@ -84,12 +101,6 @@ class _MakasarPageState extends State<MakasarPage>
     // (no query) or arriving from search both leave a shareable `?script=`
     // in the address bar. A no-op off the web; see `script_param.dart`.
     writeScriptParam(_script.name);
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
   }
 
   /// Points both canvases at [script] as well as the reference. Each wipes
@@ -113,33 +124,38 @@ class _MakasarPageState extends State<MakasarPage>
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= _wideBreakpoint;
-    final tabs = TabBarView(
-      controller: _tabs,
-      children: [
-        _canvasPanel(
-          manager: _drawingManager,
-          hint: 'Makasar — an abugida: every letter carries an inherent "a".',
-          onClear: _drawing.$2.clear,
-        ),
-        _canvasPanel(
-          manager: _writingManager,
-          hint:
-              'Leave a clear space between characters — a letter and its '
-              'vowel sign belong together.',
-          onClear: _writing.$2.clear,
-          onUndo: _writing.$2.undo,
-        ),
-      ],
-    );
+    final canvas = switch (_mode) {
+      CanvasMode.draw => _canvasPanel(
+        manager: _drawingManager,
+        // Named rather than left as upstream's fixed "Old Lontara": the page
+        // opens on New Lontara here, so the hint has to follow the dropdown.
+        hint:
+            '${_script.label} — an abugida: every letter carries an '
+            'inherent "a".',
+        onClear: _drawing.$2.clear,
+        onUndo: _drawing.$2.undo,
+      ),
+      CanvasMode.write => _canvasPanel(
+        manager: _writingManager,
+        hint:
+            'Leave a clear space between characters — a letter and its '
+            'vowel sign belong together.',
+        onClear: _writing.$2.clear,
+        onUndo: _writing.$2.undo,
+      ),
+    };
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Makasar'),
-        bottom: TabBar(
-          controller: _tabs,
-          tabs: const [
-            Tab(text: 'Draw'),
-            Tab(text: 'Write'),
+        // The page's name, and the same word in the script it names — which
+        // has to be drawn rather than typed, no font here covering the
+        // Buginese block.
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Lontara'),
+            SizedBox(width: 14),
+            LontaraWordmark(),
           ],
         ),
         actions: [
@@ -159,7 +175,7 @@ class _MakasarPageState extends State<MakasarPage>
             child: wide
                 ? Row(
                     children: [
-                      Expanded(child: tabs),
+                      Expanded(child: canvas),
                       const VerticalDivider(width: 1),
                       Expanded(
                         child: ColoredBox(
@@ -169,46 +185,84 @@ class _MakasarPageState extends State<MakasarPage>
                       ),
                     ],
                   )
-                : tabs,
+                : canvas,
           ),
         ],
       ),
     );
   }
 
-  /// The script picker, above both tabs because both read whichever script it
-  /// names. What the chosen script *is* — how many characters it holds, and
-  /// whether the canvas reads it — is stated once, at the head of the
-  /// reference, rather than repeated here.
+  /// The two pickers: which canvas is showing, and which script it reads.
+  /// The script one sits above both canvases because both read whichever
+  /// script it names. What the chosen script *is* — how many characters it
+  /// holds, and how much of it the canvas reads — is stated once, at the head
+  /// of the reference, rather than repeated here.
   Widget _controlBar(BuildContext context) {
-    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 24,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Text('Script', style: theme.textTheme.labelMedium),
-          const SizedBox(width: 12),
-          DropdownButton<WritingScript>(
+          _picker<CanvasMode>(
+            context,
+            label: 'Canvas',
+            value: _mode,
+            values: CanvasMode.values,
+            labelOf: (mode) => mode.label,
+            onChanged: (mode) => setState(() => _mode = mode!),
+          ),
+          _picker<WritingScript>(
+            context,
+            label: 'Script',
             value: _script,
+            values: WritingScript.values,
+            labelOf: (script) => script.label,
             onChanged: _select,
-            items: [
-              for (final script in WritingScript.values)
-                DropdownMenuItem(value: script, child: Text(script.label)),
-            ],
           ),
         ],
       ),
+    );
+  }
+
+  /// One labelled dropdown of the control bar. Both settings are put the same
+  /// way, so they read as a pair rather than as two different controls.
+  Widget _picker<T>(
+    BuildContext context, {
+    required String label,
+    required T value,
+    required List<T> values,
+    required String Function(T) labelOf,
+    required ValueChanged<T?> onChanged,
+  }) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: theme.textTheme.labelMedium),
+        const SizedBox(width: 12),
+        DropdownButton<T>(
+          value: value,
+          onChanged: onChanged,
+          items: [
+            for (final choice in values)
+              DropdownMenuItem(value: choice, child: Text(labelOf(choice))),
+          ],
+        ),
+      ],
     );
   }
 
   /// A canvas filling the panel, with the hint and the buttons that act on
-  /// that canvas underneath. Both tabs are laid out the same way; only the
-  /// scene, the hint and whether there is an Undo differ.
+  /// that canvas underneath. Both canvases are laid out the same way; only
+  /// the scene and the hint differ. Both keep every mark until it is taken
+  /// back, so both offer Undo as well as Clear.
   Widget _canvasPanel({
     required SceneManager manager,
     required String hint,
     required VoidCallback onClear,
-    VoidCallback? onUndo,
+    required VoidCallback onUndo,
   }) {
     return Column(
       children: [
@@ -228,14 +282,11 @@ class _MakasarPageState extends State<MakasarPage>
                   ),
                 ),
                 const SizedBox(width: 12),
-                if (onUndo != null) ...[
-                  // Always enabled: the layer ignores an undo with nothing to
-                  // take back, and the page doesn't rebuild as marks are
-                  // drawn, so a disabled state here would go stale as soon as
-                  // one was.
-                  OutlinedButton(onPressed: onUndo, child: const Text('Undo')),
-                  const SizedBox(width: 8),
-                ],
+                // Always enabled: the layer ignores an undo with nothing to
+                // take back, and the page doesn't rebuild as marks are drawn,
+                // so a disabled state here would go stale as soon as one was.
+                OutlinedButton(onPressed: onUndo, child: const Text('Undo')),
+                const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: onClear,
                   icon: const Icon(Icons.refresh, size: 18),

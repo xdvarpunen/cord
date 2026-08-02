@@ -5,7 +5,7 @@ import 'makasar_reference.dart';
 
 /// Full-screen reference for the script the page is set to: its characters
 /// with their sounds and how each letterform is built, muted where the
-/// recognizer has no gesture for one. Opened from the Makasar page's info
+/// recognizer has no gesture for one. Opened from the Lontara page's info
 /// button on narrow/mobile layouts (on desktop the table is shown inline on
 /// the side instead).
 class ReferencePage extends StatelessWidget {

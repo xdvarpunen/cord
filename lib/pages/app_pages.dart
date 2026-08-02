@@ -12,6 +12,7 @@ import '../latin/pages/latin_page.dart';
 import '../makasar/pages/makasar_page.dart';
 import '../morse/pages/morse_page.dart';
 import '../ogham/pages/ogham_page.dart';
+import '../sinhala/pages/sinhala_page.dart';
 import '../suzhou/pages/suzhou_page.dart';
 import '../tally/pages/tally_page.dart';
 import '../tomtom/pages/tomtom_page.dart';
@@ -118,6 +119,14 @@ final List<AppPage> appPages = [
     builder: (_) => const SuzhouPage(),
   ),
   AppPage(
+    route: '/sinhala',
+    title: 'Sinhala Numerals',
+    subtitle: 'Freehand Sinhala numeral recognition — Lith digits and the '
+        'older Illakkam.',
+    icon: Icons.numbers,
+    builder: (_) => const SinhalaPage(),
+  ),
+  AppPage(
     route: '/hangul',
     title: 'Hangul',
     subtitle: 'Freehand Hangul jamo (Korean letter) recognition.',
@@ -168,8 +177,10 @@ final List<AppPage> appPages = [
   ),
   AppPage(
     route: '/makasar',
-    title: 'Makasar',
-    subtitle: 'Freehand Makasar letter and syllable writing (South Sulawesi).',
+    title: 'Lontara',
+    subtitle:
+        'Freehand Lontara letter and syllable writing (South Sulawesi), '
+        'old script and new.',
     icon: Icons.draw,
     builder: (_) => const MakasarPage(),
   ),

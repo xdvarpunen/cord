@@ -5,7 +5,7 @@
 /// and Greek pages for their `?alphabet=` — `flutter test` runs on the VM,
 /// where importing `dart:html` is a *compile* error, so the one web-only call
 /// goes behind a conditional import: the real thing on the web, a no-op
-/// everywhere else. The Makasar page is widget-tested, so it needs it.
+/// everywhere else. The Lontara page is widget-tested, so it needs it.
 ///
 /// Reading the parameter needs no shim. `Uri.base` exists on every platform;
 /// off the web it is the working directory, which carries no query and so

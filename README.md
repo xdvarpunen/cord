@@ -21,6 +21,7 @@ or by deep link (desktop shows a reference table beside the canvas).
 | **Tally Marks** | `/tally` | five tally systems (dropdown, `?system=`) |
 | **Etruscan Numerals** | `/etruscan` | 𐌠1 𐌡5 𐌢10 𐌣50 𐌟100 → additive total |
 | **Suzhou Numerals** | `/suzhou` | 〇 and 〡–〩 rod/*huāmǎ* digits |
+| **Sinhala Numerals** | `/sinhala` | ෦–෯ Lith digits, or the older ඉලක්කම් (Illakkam) with no zero (dropdown, `?system=`) · `Yaldevi` |
 | **Hangul** | `/hangul` | jamo: strokes, ticks, corners, loops, compounds |
 | **Hangul Grid** | `/hangul-grid` | whole syllables in notebook squares; each row read out |
 | **Hanzi Grid** | `/hanzi` | whole Han characters in 米-ruled squares (script dropdown, `?script=`); pinyin + English + confidence, and whose stroke order you used |
@@ -28,7 +29,7 @@ or by deep link (desktop shows a reference table beside the canvas).
 | **Cyrillic** | `/cyrillic` | printed Russian capitals, all 33 (Ё = Е + two taps) |
 | **Latin** | `/latin` | printed capitals + their marks — 111 letters over 31 alphabets (dropdown, `?alphabet=`) |
 | **Greek** | `/greek` | capitals Α–Ω, plus Ϝ and Ϙ — 3 alphabets by date (dropdown, `?alphabet=`) |
-| **Makasar** | `/makasar` | South Sulawesi abugida — one letter (Draw) or a whole row (Write); Makasar or Bugis/Lontara (dropdown, `?script=`) · `NotoSerifMakasar` + images |
+| **Lontara** | `/makasar` | South Sulawesi abugida — one letter (Draw) or a whole row (Write), canvas dropdown; New Lontara (Bugis, the default) or Old Lontara (Makasar) (dropdown, `?script=`) · `NotoSerifMakasar` + letterform images |
 
 ## Architecture
 
@@ -41,8 +42,9 @@ or by deep link (desktop shows a reference table beside the canvas).
   `app_pages.dart`, `home_page.dart`, `search_page.dart`).
 - **Engine** — a `Ticker` game loop repaints a stack of `Layer`s: a dot-grid
   `PaperLayer` under a recognizer that captures strokes and paints the readout.
-- Fonts are bundled only for Futhark/Tifinagh/Makasar; the rest draw glyphs as
-  vectors or lean on the browser's CJK/Hebrew/Cyrillic/Latin/Greek fallbacks.
+- Fonts are bundled only for Futhark/Tifinagh/Lontara/Sinhala; the rest draw
+  glyphs as vectors or lean on the browser's CJK/Hebrew/Cyrillic/Latin/Greek
+  fallbacks.
   Clean paths (`usePathUrlStrategy`) + a full PWA manifest.
 
 **Add a feature:** create `lib/<feature>/` (copy an existing one's `engine/`,

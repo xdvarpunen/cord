@@ -26,7 +26,7 @@ flutter:
     # Unicode codepoint). CC0 — see assets/tifi/libyco_berber/SOURCE.txt.
     - assets/tifi/libyco_berber/
     # The Makasar and Lontara letterforms as drawn, shown at the head of every
-    # row of the Makasar page's reference (see GlyphImage) — the only rendering
+    # row of the Lontara page's reference (see GlyphImage) — the only rendering
     # there is of the Lontara ones, no bundled font covering the Buginese block.
     - assets/makasar/glyphs/
   fonts:
@@ -41,8 +41,17 @@ flutter:
     - family: NotoSansTifinagh
       fonts:
         - asset: assets/tifi/NotoSansTifinagh-Regular.ttf
-    # Makasar glyphs for the Makasar page (recognized-character readout +
+    # Makasar glyphs for the Lontara page (recognized-character readout +
     # reference table). SIL OFL — see assets/makasar/OFL.txt.
     - family: NotoSerifMakasar
       fonts:
         - asset: assets/makasar/NotoSerifMakasar-Regular.ttf
+    # Sinhala glyphs for the Sinhala numerals page (recognized-numeral readout
+    # + reference tables): the Lith digits at U+0DE6–U+0DEF and the Illakkam
+    # symbols at U+111E1–U+111F4, which sit outside the Basic Multilingual
+    # Plane. Flutter web has no guaranteed system Sinhala font, and Yaldevi's
+    # Lith forms match the traditional shapes where Noto Sans's do not. SIL
+    # OFL — see assets/sinhala/OFL.txt and FONT_NOTE.txt.
+    - family: Yaldevi
+      fonts:
+        - asset: assets/sinhala/Yaldevi-Regular.ttf

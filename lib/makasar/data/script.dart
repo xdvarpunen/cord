@@ -1,11 +1,13 @@
 /// Which of the two South Sulawesi scripts a character listing is showing.
 ///
-/// Only [WritingScript.makasar] is recognized from a gesture — Bugis is
-/// reference material, so switching to it changes what is listed and
-/// nothing about what the canvas reads.
+/// The app names them as the two ages of one script: [makasar] — the
+/// Makasar script the code is named after — is shown as **Old Lontara**,
+/// and [bugis] as **New Lontara**. Only [makasar] is recognized from a
+/// gesture; New Lontara is reference material, so switching to it changes
+/// what is listed and nothing about what the canvas reads.
 enum WritingScript {
-  makasar('Makasar'),
-  bugis('Bugis (Lontara)');
+  makasar('Old Lontara'),
+  bugis('New Lontara');
 
   const WritingScript(this.label);
 

@@ -6,28 +6,30 @@ import '../data/script.dart';
 import '../scenes/makasar_scene.dart';
 import '../widgets/glyph_image.dart';
 
-/// The reference for one of the two South Sulawesi abugidas:
+/// The reference for one of the two ages of the South Sulawesi abugida:
 ///
-/// - **Makasar**, the script the canvas reads: its 18 letters with the sound
-///   each carries and how its letterform decomposes into the script's
-///   building blocks ([MakasarLetter.shape]), then the four vowel signs that
-///   replace a letter's inherent `a`, then the repeater and the two
-///   punctuation marks ([makasarOtherSigns]).
-/// - **Bugis (Lontara)**, mostly reference: its 23 letters — five of which
-///   Makasar has no equivalent for — five vowel signs and two punctuation
-///   marks, each row naming the Makasar letter it lines up with. See
-///   [LontaraLetter].
+/// - **Old Lontara** ([WritingScript.makasar], the Makasar script the code is
+///   named after): its 18 letters with the sound each carries and how its
+///   letterform decomposes into the script's building blocks
+///   ([MakasarLetter.shape]), then the four vowel signs that replace a
+///   letter's inherent `a`, then the repeater and the two punctuation marks
+///   ([makasarOtherSigns]).
+/// - **New Lontara** ([WritingScript.bugis], the Bugis script still written
+///   today): its 23 letters — five of which Old Lontara has no equivalent
+///   for — five vowel signs and two punctuation marks, each row naming the
+///   Old Lontara letter it lines up with. See [LontaraLetter].
 ///
 /// Every row leads with the letterform as drawn ([GlyphImage]), which for the
-/// Lontara rows is the only rendering of the character there is. A row the
-/// recognizer has no gesture for is muted (see
+/// New Lontara rows is the only rendering of the character there is. A row
+/// the recognizer has no gesture for is muted (see
 /// [MakasarLayer.recognizedNamesFor]) — the character is part of the script
-/// and still worth listing, but it can't be drawn yet, which is most of
-/// Lontara and every vowel sign of neither script.
+/// and still worth listing, but it can't be drawn yet. Both scripts are read
+/// whole today, so nothing is muted; the table still asks the recognizer, so
+/// it can't drift if that ever stops being true.
 ///
 /// Shared by the desktop side panel on [MakasarPage] and the full-screen
 /// [ReferencePage], the same way the other script features share their table.
-/// This is upstream `makasar`'s own reference table; what it lost in the port
+/// This is upstream `lontara`'s own reference table; what it lost in the port
 /// is the script dropdown at its head — cord's page carries one already, and
 /// the two would only have to be kept agreeing.
 class MakasarReference extends StatelessWidget {
@@ -227,8 +229,8 @@ class MakasarReference extends StatelessWidget {
     );
   }
 
-  /// What the script is and how much of it there is, plus — for Lontara —
-  /// the reason its rows show a codepoint where the Makasar rows show the
+  /// What the script is and how much of it there is, plus — for New Lontara —
+  /// the reason its rows show a codepoint where the Old Lontara rows show the
   /// character itself.
   Widget _head(BuildContext context) {
     final theme = Theme.of(context);
@@ -248,7 +250,7 @@ class MakasarReference extends StatelessWidget {
           if (script == WritingScript.bugis) ...[
             const SizedBox(height: 4),
             Text(
-              'No Buginese font is bundled, so the drawn letterform is the '
+              'No New Lontara font is bundled, so the drawn letterform is the '
               'only rendering here — the Code column is the Unicode '
               'codepoint.',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -261,20 +263,20 @@ class MakasarReference extends StatelessWidget {
     );
   }
 
-  /// The Makasar letter a Lontara letter lines up with, shown as its glyph
-  /// plus name — or a plain note for the five that have no counterpart.
+  /// The Old Lontara letter a New Lontara one lines up with, shown as its
+  /// glyph plus name — or a plain note for the five that have no counterpart.
   static Widget _counterpart(String? name, TextStyle glyphStyle) {
     final letter = name == null ? null : makasarLettersByName[name];
     if (letter == null) {
       return const Text(
-        'no Makasar letter',
+        'no Old Lontara letter',
         style: TextStyle(color: Colors.black54),
       );
     }
     return Text.rich(
       TextSpan(
         children: [
-          const TextSpan(text: 'Makasar '),
+          const TextSpan(text: 'Old Lontara '),
           TextSpan(text: letter.glyph, style: glyphStyle),
           TextSpan(text: ' ${letter.name}'),
         ],
@@ -304,13 +306,13 @@ String legendFor(WritingScript script) => switch (script) {
   WritingScript.makasar =>
     '${makasarLetters.length} letters, '
         '${makasarVowelSigns.length} vowel signs and '
-        '${makasarOtherSigns.length} other signs — the script the canvas '
-        'reads',
+        '${makasarOtherSigns.length} other signs — the Makasar script, out of '
+        'use since the 19th century',
   WritingScript.bugis =>
     '${lontaraLetters.length} letters, '
         '${lontaraVowelSigns.length} vowel signs and '
-        '${lontaraOtherSigns.length} punctuation marks — the sibling script, '
-        'mostly reference',
+        '${lontaraOtherSigns.length} punctuation marks — the Bugis script, '
+        'the one still written today',
 };
 
 class _SectionHeader extends StatelessWidget {
@@ -387,9 +389,9 @@ class _BodyCell extends StatelessWidget {
       _Cell(width, child: Text(text, style: style));
 }
 
-/// A character's codepoint, for the Lontara rows — nothing in the bundle
-/// renders the Buginese block, so `U+1A00` is shown where the Makasar rows
-/// show the character itself.
+/// A character's codepoint, for the New Lontara rows — nothing in the bundle
+/// renders the Buginese block, so `U+1A00` is shown where the Old Lontara
+/// rows show the character itself.
 class _CodeCell extends StatelessWidget {
   const _CodeCell(this.glyph, this.width);
   final String glyph;

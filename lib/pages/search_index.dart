@@ -12,6 +12,9 @@ import '../latin/pages/latin_page.dart';
 import '../makasar/data/script.dart';
 import '../makasar/pages/makasar_page.dart';
 import '../makasar/pages/makasar_reference.dart';
+import '../sinhala/pages/sinhala_page.dart';
+import '../sinhala/pages/sinhala_reference.dart';
+import '../sinhala/scenes/sinhala_scene.dart';
 import '../tally/data/tally_systems.dart';
 import '../tally/pages/tally_page.dart';
 import 'app_pages.dart';
@@ -56,12 +59,12 @@ class SearchEntry {
 
 /// Everything the search page lists: each page (except search itself), then
 /// every tally system, every Hanzi Grid script, every Latin alphabet, every
-/// Greek one and each of Makasar's two scripts — the five pages that have
-/// dropdown content of their own. Built from the same registries the rest of
-/// the app uses, so search never goes stale.
+/// Greek one, each of Lontara's two scripts and each of Sinhala's two numeral
+/// systems — the six pages that have dropdown content of their own. Built from
+/// the same registries the rest of the app uses, so search never goes stale.
 ///
 /// A future page with its own dropdown content adds its items here the same
-/// way these five do.
+/// way these six do.
 List<SearchEntry> buildSearchIndex() => [
       for (final page in appPages)
         if (page.route != '/search')
@@ -124,18 +127,36 @@ List<SearchEntry> buildSearchIndex() => [
               '${alphabet.name} greek alphabet letters ${alphabet.letters}',
           builder: (_) => GreekPage(initialAlphabet: alphabet.name),
         ),
-      // Both again, on the same reasoning: the page opens on Makasar, but
-      // Bugis (Lontara) is the sibling script someone would search for by
-      // name, and "Makasar" the script is worth its own row beside "Makasar"
-      // the page — the row says how much of the script there is.
+      // Both again, on the same reasoning: the page opens on New Lontara, but
+      // Old Lontara is the sibling script someone would search for by name,
+      // and either age of the script is worth its own row beside "Lontara"
+      // the page — the row says how much of the script there is. The older
+      // names are keywords, since Makasar and Bugis are what the two are
+      // called everywhere outside this app.
       for (final script in WritingScript.values)
         SearchEntry(
           title: script.label,
-          subtitle: 'Makasar · ${legendFor(script)}',
+          subtitle: 'Lontara · ${legendFor(script)}',
           route: '/makasar',
           icon: Icons.draw,
-          keywords: '${script.name} makasar lontara bugis buginese '
+          keywords: '${script.name} lontara makasar bugis buginese '
               'makassarese south sulawesi abugida jangang-jangang',
           builder: (_) => MakasarPage(initialScript: script.name),
+        ),
+      // Both of the Sinhala numeral systems, on the same reasoning again: the
+      // page opens on Lith, but "Illakkam" is the name someone would search
+      // for, and the two are different ways of writing a number rather than
+      // two styles of the one. The romanized names of the numbers are
+      // keywords, so searching "dahasa" or "binduva" finds the system that
+      // has it.
+      for (final system in numeralSystems)
+        SearchEntry(
+          title: system.label,
+          subtitle: 'Sinhala · ${legendForSystem(system)}',
+          route: '/sinhala',
+          icon: Icons.numbers,
+          keywords: '${system.name} sinhala sinhalese numerals numbers digits '
+              'sri lanka ${keywordsForSystem(system)}',
+          builder: (_) => SinhalaPage(initialSystem: system.name),
         ),
     ];

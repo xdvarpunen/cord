@@ -53,7 +53,7 @@ const makasarLetters = [
       '2 wedges, the second dropping only slightly'),
   MakasarLetter('\u{11EE4}', 'ba', 'b', 'mak_ba', '2 wedges + a chevron below'),
   MakasarLetter(
-      '\u{11EE5}', 'ma', 'm', 'mak_ma', '2 wedges + a barred wedge below'),
+      '\u{11EE5}', 'ma', 'm', 'mak_ma', '2 wedges + a closed mark below'),
   MakasarLetter('\u{11EE6}', 'ta', 't', 'mak_ta',
       'wedge + a bowl on its right arm, crossing once'),
   MakasarLetter(
@@ -65,15 +65,15 @@ const makasarLetters = [
   MakasarLetter(
       '\u{11EEB}', 'nya', 'ɲ', 'mak_nya', '3 wedges, arms crossing twice'),
   MakasarLetter('\u{11EEC}', 'ya', 'j', 'mak_ya',
-      '3 wedges crossing + an ascending line below'),
+      'ka’s sweep, over 2 peaks on the way back + a line below'),
   MakasarLetter('\u{11EED}', 'ra', 'r', 'mak_ra',
       'a stem hooking back + a chevron below'),
   MakasarLetter('\u{11EEE}', 'la', 'l', 'mak_la',
-      'one stroke doubling back twice, base first'),
+      'a hook over a base, one stroke doubling back twice'),
   // Unicode names this letter VA (U+11EEF MAKASAR LETTER VA); Wikipedia's
   // letter table transliterates it wa, which is what it's called here.
   MakasarLetter('\u{11EEF}', 'wa', 'w', 'mak_wa',
-      '2 rightward strokes over a shared base'),
+      'one stroke: up, down, right along the base, then up and down'),
   MakasarLetter('\u{11EF0}', 'sa', 's', 'mak_sa',
       'left, right, then a long drop back left'),
   // Also read ha.

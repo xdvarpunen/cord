@@ -217,6 +217,12 @@ class WritingLayer extends Layer {
     );
   }
 
+  /// The row as letterforms, in the order they were written — every
+  /// character's own drawn form with its vowel sign written on it, so the
+  /// row reads as the word it is rather than as letters and loose marks.
+  List<GlyphCluster> get _glyphClusters =>
+      [for (final character in _characters) MakasarInk.glyphClusterOf(character)];
+
   void _paintReading(Canvas canvas, Size size) {
     final label = TextPainter(
       text: _characters.isEmpty
@@ -242,7 +248,23 @@ class WritingLayer extends Layer {
             ),
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: size.width - 48);
-    label.paint(canvas, Offset(24, size.height - 24 - label.height));
+
+    // The row drawn out in letterforms under the reading of it — which for
+    // New Lontara is the only picture of what was written, there being no
+    // font for it.
+    final clusters = _glyphClusters;
+    final overhang = MakasarInk.glyphClusterOverhang(clusters);
+    final glyphTop =
+        size.height - 24 - overhang.below - MakasarInk.glyphImageHeight;
+    if (clusters.every((cluster) => cluster.letter == null)) {
+      label.paint(canvas, Offset(24, size.height - 24 - label.height));
+      return;
+    }
+    label.paint(
+      canvas,
+      Offset(24, glyphTop - overhang.above - 8 - label.height),
+    );
+    MakasarInk.drawGlyphClusters(canvas, clusters, Offset(24, glyphTop));
   }
 
   Rect _boundsOf(List<Offset> points) {

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
@@ -87,6 +88,32 @@ const _kaCorners = [
   Offset(25, 60),
 ];
 
+/// 𑻬's: 𑻠's stroke exactly on the way out — up, down, up — then back
+/// left over two whole peaks instead of one, up, down, up, down.
+const _yaCorners = [
+  Offset(0, 60),
+  Offset(20, 10),
+  Offset(40, 70),
+  Offset(60, 20),
+  Offset(45, 5),
+  Offset(35, 55),
+  Offset(25, 10),
+  Offset(15, 60),
+];
+
+/// 𑻯 as it comes off the canvas, traced from a drawn one: up over the
+/// first hook, back down to the bottom left, out along the base, up over
+/// the second hook — mirrored, so the pen climbs it leftward — and down
+/// again. One stroke, five sideways runs, the base the middle one.
+const _waCorners = [
+  Offset(78, 88),
+  Offset(135, 36),
+  Offset(80, 170),
+  Offset(292, 178),
+  Offset(215, 42),
+  Offset(290, 92),
+];
+
 /// A stroke through [corners] in order.
 List<Offset> _polyline(List<Offset> corners) => [
       for (var i = 1; i < corners.length; i++)
@@ -110,6 +137,29 @@ List<Offset> _closedWedge(double left, double top, {double size = 30}) {
     ..._line(apex, bottomRight).skip(1),
     ..._line(bottomRight, Offset(left - 4, top + size - 5)).skip(1),
   ];
+}
+
+/// A circle round [centre], drawn from [fromDegrees] and sweeping
+/// [sweepDegrees] — the mark a hand puts under 𑻥's wedges in place of the
+/// letterform's barred wedge. Under 360 it stops short of closing; the
+/// way round and where it starts are what the hand decides, and neither
+/// should change what it reads as.
+List<Offset> _circle(Offset centre, double radius,
+    {double fromDegrees = 90,
+    double sweepDegrees = 360,
+    bool clockwise = true}) {
+  const step = 10;
+  return [
+    for (var i = 0; i * step <= sweepDegrees; i++)
+      _pointOnCircle(centre, radius,
+          fromDegrees + (clockwise ? 1 : -1) * (i * step).toDouble()),
+  ];
+}
+
+Offset _pointOnCircle(Offset centre, double radius, double degrees) {
+  final radians = degrees * math.pi / 180;
+  return Offset(centre.dx + radius * math.cos(radians),
+      centre.dy + radius * math.sin(radians));
 }
 
 /// `V` — down to the point and back up, wider than it is tall.
@@ -162,6 +212,100 @@ void main() {
       final layer = MakasarLayer();
       _draw(layer, _doubleWedge(0, 0));
       _draw(layer, _closedWedge(30, 60));
+      expect(layer.recognizedName, 'ma');
+    });
+
+    test('a circle under the wedges is ma, wherever it is begun', () {
+      // Which of up-down or down-up a loop splits into is decided by
+      // where the pen joins it, so a circle would otherwise be read as
+      // 𑻤's chevron or 𑻡's wedge depending on nothing at all.
+      for (final from in [0.0, 90.0, 180.0, 270.0]) {
+        for (final clockwise in [true, false]) {
+          final layer = MakasarLayer();
+          _draw(layer, _doubleWedge(0, 0));
+          _draw(
+              layer,
+              _circle(const Offset(40, 75), 16,
+                  fromDegrees: from, clockwise: clockwise));
+          expect(layer.recognizedName, 'ma',
+              reason: 'from $from, clockwise $clockwise');
+        }
+      }
+    });
+
+    test('a flat boxed-in loop under the wedges is ma too', () {
+      final layer = MakasarLayer();
+      // Traced off a drawn 𑻥: the mark is twice as wide as it is tall,
+      // drawn down the left, along the bottom, up the right and back over
+      // the top, with the bar overshooting a little at the corner.
+      _draw(
+        layer,
+        _polyline(const [
+          Offset(648, 110),
+          Offset(680, 88),
+          Offset(700, 92),
+          Offset(716, 112),
+          Offset(740, 100),
+          Offset(772, 98),
+          Offset(794, 122),
+        ]),
+      );
+      _draw(
+        layer,
+        _polyline(const [
+          Offset(690, 145),
+          Offset(692, 158),
+          Offset(700, 161),
+          Offset(715, 161),
+          Offset(722, 157),
+          Offset(723, 145),
+          Offset(735, 142),
+          Offset(688, 143),
+        ]),
+      );
+      expect(layer.recognizedName, 'ma');
+    });
+
+    test('a mark shaped like the wedges above it is still ma', () {
+      final layer = MakasarLayer();
+      _draw(layer, _doubleWedge(0, 0));
+      // A zigzag that crosses itself — 𑻪's own shape, drawn small
+      // underneath, so the mark answers to "wedges" as readily as the
+      // stroke it hangs from does.
+      _draw(
+        layer,
+        _polyline(const [
+          Offset(30, 70),
+          Offset(40, 55),
+          Offset(50, 70),
+          Offset(25, 55),
+          Offset(33, 72),
+        ]),
+      );
+      expect(layer.recognizedName, 'ma');
+    });
+
+    test('a line doubling back across itself is a closed mark too', () {
+      final layer = MakasarLayer();
+      _draw(layer, _doubleWedge(0, 0));
+      _draw(
+        layer,
+        _polyline(const [
+          Offset(10, 60),
+          Offset(60, 85),
+          Offset(55, 55),
+          Offset(20, 85),
+        ]),
+      );
+      expect(layer.recognizedName, 'ma');
+    });
+
+    test('a circle left a little open is still ma', () {
+      final layer = MakasarLayer();
+      _draw(layer, _doubleWedge(0, 0));
+      // Stopping 30° short leaves no crossing to count, and the shape is
+      // closed off all the same.
+      _draw(layer, _circle(const Offset(40, 75), 16, sweepDegrees: 330));
       expect(layer.recognizedName, 'ma');
     });
 
@@ -268,19 +412,44 @@ void main() {
       expect(da.recognizedName, 'da');
     });
 
-    test('the same shape with both pieces running only rightward is wa', () {
+    test('two hooks doubling back about the base between them is wa', () {
+      final layer = MakasarLayer();
+      _draw(layer, _polyline(_waCorners));
+      expect(layer.recognizedName, 'wa');
+    });
+
+    test('the same five sweeps with no base in the middle are not wa', () {
+      final layer = MakasarLayer();
+      // Five runs, but climbing steadily rather than doubling back about
+      // a base — the middle run is as high as the rest.
+      _draw(
+        layer,
+        _polyline(const [
+          Offset(10, 80),
+          Offset(80, 78),
+          Offset(30, 55),
+          Offset(85, 45),
+          Offset(35, 20),
+          Offset(90, 10),
+        ]),
+      );
+      expect(layer.recognizedName, isNot('wa'));
+    });
+
+    test('the same five sweeps starting leftward are a, not wa', () {
       final layer = MakasarLayer();
       _draw(
         layer,
         _polyline(const [
+          Offset(90, 80),
+          Offset(20, 78),
+          Offset(70, 55),
+          Offset(15, 45),
+          Offset(65, 20),
           Offset(10, 10),
-          Offset(30, 55),
-          Offset(40, 85),
-          Offset(90, 85),
-          Offset(120, 25),
         ]),
       );
-      expect(layer.recognizedName, 'wa');
+      expect(layer.recognizedName, 'a');
     });
 
     test('a plain double wedge has no base, so it is not da', () {
@@ -337,11 +506,18 @@ void main() {
       expect(layer.recognizedName, 'nya');
     });
 
-    test('nya’s triple wedge + an ascending line below is ya', () {
+    test('ka’s stroke, back over a second peak + a line below, is ya', () {
       final layer = MakasarLayer();
-      _draw(layer, _polyline(_nyaCorners));
-      _draw(layer, _polyline(const [Offset(8, 90), Offset(35, 60)]));
+      _draw(layer, _polyline(_yaCorners));
+      _draw(layer, _polyline(const [Offset(10, 110), Offset(50, 85)]));
       expect(layer.recognizedName, 'ya');
+    });
+
+    test('one peak fewer on the way back is ka, not ya', () {
+      final layer = MakasarLayer();
+      _draw(layer, _polyline(_kaCorners));
+      _draw(layer, _polyline(const [Offset(10, 110), Offset(50, 85)]));
+      expect(layer.recognizedName, 'ka');
     });
 
     test('the mark can be drawn before the wedges it belongs under', () {
@@ -450,8 +626,10 @@ void main() {
       expect(layer.recognizedName, 'la');
     });
 
-    test('the same stroke starting along its top is not la', () {
+    test('the same stroke finishing along its base is la too', () {
       final layer = MakasarLayer();
+      // The hook first and the base run out from under it afterwards,
+      // which is how it comes off the canvas as often as not.
       _draw(
         layer,
         _polyline(const [
@@ -459,6 +637,22 @@ void main() {
           Offset(40, 15),
           Offset(10, 50),
           Offset(45, 60),
+        ]),
+      );
+      expect(layer.recognizedName, 'la');
+    });
+
+    test('a right-left-right stroke with no base to it is not la', () {
+      final layer = MakasarLayer();
+      // It dips to the bottom between the two rightward runs, but neither
+      // of them runs along it — the pen only touches the base turning.
+      _draw(
+        layer,
+        _polyline(const [
+          Offset(0, 30),
+          Offset(40, 25),
+          Offset(10, 80),
+          Offset(45, 20),
         ]),
       );
       expect(layer.recognizedName, isNot('la'));
@@ -546,6 +740,38 @@ void main() {
       expect(layer.recognizedName, 'end of section');
     });
 
+    test('six taps zigzagging are the end of section, stacked or not', () {
+      final layer = MakasarLayer();
+      // The letterform's own arrangement: to either side of a centre
+      // line, no two of them lining up with each other.
+      for (final at in const [
+        Offset(30, 20),
+        Offset(70, 45),
+        Offset(30, 70),
+        Offset(110, 70),
+        Offset(70, 95),
+        Offset(30, 120),
+      ]) {
+        _tap(layer, at);
+      }
+      expect(layer.recognizedName, 'end of section');
+    });
+
+    test('a letter written between two runs of taps keeps them apart', () {
+      final layer = MakasarLayer();
+      for (var i = 0; i < 3; i++) {
+        _tap(layer, Offset(20, 20 + 30.0 * i));
+      }
+      _draw(layer, _wedge(60, 20));
+      for (var i = 0; i < 3; i++) {
+        _tap(layer, Offset(130, 20 + 30.0 * i));
+      }
+      // Six taps near enough to run together, but a letter stands
+      // between them, so they are two passimbangs rather than one end of
+      // section.
+      expect(layer.recognizedName, 'passimbang');
+    });
+
     test('a tap clear of the one above it breaks the column', () {
       final layer = MakasarLayer();
       _tap(layer, const Offset(40, 20));
@@ -572,6 +798,27 @@ void main() {
       _tap(layer, const Offset(20, 40));
       _tap(layer, const Offset(80, 44));
       _tap(layer, const Offset(140, 38));
+      expect(layer.recognizedName, isNull);
+    });
+
+    test('undo takes the last mark back and reads what is left', () {
+      final layer = MakasarLayer();
+      _draw(layer, _doubleWedge(0, 0));
+      _draw(layer, _wedge(30, 60, size: 30));
+      expect(layer.recognizedName, 'ga');
+
+      layer.undo();
+      // The wedges on their own are no letter at all.
+      expect(layer.recognizedName, isNull);
+
+      // And what is left takes another mark as readily as the first did.
+      _draw(layer, _chevron(40, 60));
+      expect(layer.recognizedName, 'ba');
+    });
+
+    test('undo with nothing to take back does nothing', () {
+      final layer = MakasarLayer();
+      layer.undo();
       expect(layer.recognizedName, isNull);
     });
 
@@ -833,20 +1080,43 @@ void main() {
       expect(layer.recognizedName, 'pallawa');
     });
 
-    test('three taps stacked in a column are not pallawa', () {
+    test('three taps stacked in a column are pallawa as well', () {
       final layer = lontara();
       for (var i = 0; i < 3; i++) {
         _tap(layer, Offset(40, 20 + 30.0 * i));
       }
-      expect(layer.recognizedName, isNull);
+      expect(layer.recognizedName, 'pallawa');
     });
 
-    test('three taps stepping up to the right are not pallawa', () {
+    test('three taps stepping up to the right are pallawa too', () {
       final layer = lontara();
       _tap(layer, const Offset(20, 60));
       _tap(layer, const Offset(35, 40));
       _tap(layer, const Offset(50, 20));
-      expect(layer.recognizedName, isNull);
+      expect(layer.recognizedName, 'pallawa');
+    });
+
+    test('a letter written between two runs of taps keeps them apart', () {
+      final layer = lontara();
+      _tap(layer, const Offset(20, 20));
+      _tap(layer, const Offset(30, 45));
+      _draw(layer, _wedge(60, 20));
+      _tap(layer, const Offset(130, 20));
+      // Four taps close enough to run together, but a letter stands
+      // between them, so neither side is a mark of three.
+      expect(layer.recognizedName, isNot('pallawa'));
+    });
+
+    test('a tap drawn clear of the others is a run of its own', () {
+      final layer = lontara();
+      _tap(layer, const Offset(20, 20));
+      _tap(layer, const Offset(35, 40));
+      _tap(layer, const Offset(50, 60));
+      expect(layer.recognizedName, 'pallawa');
+      // Well past _maxDotSpacing, so it starts a new mark rather than
+      // making this one four taps long.
+      _tap(layer, const Offset(200, 60));
+      expect(layer.recognizedName, isNot('pallawa'));
     });
 
     test('two ascending lines whose x ranges overlap are ka', () {

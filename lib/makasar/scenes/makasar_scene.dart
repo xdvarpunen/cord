@@ -1,8 +1,13 @@
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
+import '../data/glyphs.dart';
 import '../data/script.dart';
 import '../engine/scene.dart';
+import 'glyph_images.dart';
 
 /// Cream, dot-grid paper background (Moleskine-style notebook page).
 class PaperLayer extends Layer {
@@ -55,7 +60,8 @@ enum MakasarCharacter implements ScriptCharacter {
   /// A double wedge (`ΛΛ`, one stroke) + a wedge under it.
   ga('\u{11EE1}', 'ga', 'ɡ'),
 
-  /// A double wedge + a self-crossing (closed) mark under it.
+  /// A double wedge + a mark that closes on itself under it — a loop, or
+  /// the wedge shut with a bar the letterform draws.
   ma('\u{11EE5}', 'ma', 'm'),
 
   /// Two wedges + a chevron (`V`) under them.
@@ -97,10 +103,12 @@ enum MakasarCharacter implements ScriptCharacter {
   /// One stroke doubling back twice sideways, starting along the bottom.
   la('\u{11EEE}', 'la', 'l'),
 
-  /// 𑻠 with a third wedge in the stroke.
+  /// 𑻠's stroke with a second peak on the way back + the same line under
+  /// it.
   ya('\u{11EEC}', 'ya', 'j'),
 
-  /// 𑻧's shape with both pieces running rightward only.
+  /// 𑻮's hook drawn a second time, mirrored, about the base between them,
+  /// without the pen leaving the paper.
   wa('\u{11EEF}', 'wa', 'w'),
 
   /// One stroke sweeping sideways five times over. Also read ha.
@@ -112,7 +120,8 @@ enum MakasarCharacter implements ScriptCharacter {
   /// Three taps in a row. Punctuation, so no sound either.
   passimbang('\u{11EF7}', 'passimbang', null),
 
-  /// Six taps in a row.
+  /// Six taps drawn together, zigzagging about a centre line rather than
+  /// stacked the way 𑻷's three are.
   endOfSection('\u{11EF8}', 'end of section', null);
 
   const MakasarCharacter(this.glyph, this.letterName, this.sound);
@@ -294,16 +303,18 @@ enum VowelMark {
 ///   rise at least twice the height of the rest ([_isAngkaShaped]).
 /// - 𑻭 (ra) — that same stroke + a chevron underneath, the way 𑻢 pairs a
 ///   wedge with one.
-/// - 𑻮 (la), 𑻰 (sa) and 𑻱 (a) — read off *horizontal* direction instead
-///   of vertical: 𑻮 goes right, back left and right again, starting along
-///   its own base ([_classifyLa]); 𑻰 goes left, right, then away down to
-///   the left ([_classifySa]); 𑻱 sweeps sideways five times over,
-///   starting leftward ([_classifyA]).
+/// - 𑻮 (la), 𑻯 (wa), 𑻰 (sa) and 𑻱 (a) — read off *horizontal* direction
+///   instead of vertical: 𑻮 goes right, back left and right again,
+///   with one end of it along its own base ([_classifyLa]); 𑻯 is that
+///   hook drawn twice, the second mirrored, about the base between them —
+///   right, left, right, left, right, the middle run being the base
+///   ([_classifyWa]); 𑻰 goes left, right, then away down to the
+///   left ([_classifySa]); 𑻱 sweeps sideways five times over, starting
+///   leftward, which is 𑻯 mirrored ([_classifyA]).
 /// - 𑻫 (nya) — a **triple wedge** on its own, crossing itself twice.
-/// - 𑻬 (ya) — 𑻠 with one more wedge in the stroke: a self-crossing
-///   triple wedge + an ascending line underneath.
-/// - 𑻯 (wa) — 𑻧's own shape with both pieces running rightward only
-///   ([_isRightwardRun]) instead of doubling back.
+/// - 𑻬 (ya) — 𑻠's stroke with one more wedge in it: the same sweep out
+///   and back under the same line, but coming back over two peaks rather
+///   than one ([_isYaShaped]).
 ///
 /// Every element is read off a single stroke's vertical direction:
 /// [_splitByVerticalDirectionChange] cuts the stroke where it reverses
@@ -315,12 +326,16 @@ enum VowelMark {
 /// [_wedgesWithMark] / [_isUnder]), so a letter can be drawn in
 /// either order.
 ///
-/// Taps are their own family, drawn as hollow circles and grouped into
-/// columns by which of them overlap in x ([_dotColumns]); a mark is then
-/// just how many taps its column holds ([_classifyDotColumn]):
+/// Taps are their own family, drawn as hollow circles, and a mark is how
+/// many of them belong together:
 ///
-/// - 𑻷 (passimbang, the phrase separator) — a column of three.
-/// - 𑻸 (end of section) — a column of six.
+/// - 𑻷 (passimbang, the phrase separator) — three stacked, grouped by
+///   which taps overlap in x ([_dotColumns], [_classifyDotColumn]).
+/// - 𑻸 (end of section) — six, which the letterform sets zigzagging to
+///   either side of a centre line rather than stacking, so they are
+///   grouped by having been drawn together instead: near enough to each
+///   other, with nothing written in among them ([_dotRuns],
+///   [_classifyDotRun]).
 ///
 /// The four vowel signs are read differently again: rather than being
 /// shapes in their own right, they are marks placed against a letter
@@ -423,6 +438,30 @@ class MakasarRecognizer {
     true,
     false,
   ];
+
+  /// 𑻯's: 𑻮's right-left-right with the doubling back done a second
+  /// time — the same five sweeps as 𑻱, mirrored, starting rightward.
+  static const _rightLeftRightLeftRightSequence = [
+    true,
+    false,
+    true,
+    false,
+    true,
+  ];
+
+  /// How far apart in x two of 𑻸's taps may be drawn and still be the
+  /// same mark — see [_dotRuns].
+  static const double _maxDotSpacing = _dotRadius * 4;
+
+  /// How far apart 𑻥's mark may leave its two ends and still count as
+  /// closed, as a fraction of its own longest side — see [_isClosedMark].
+  static const double _maxClosingGap = 0.35;
+
+  /// How far round a mark that doesn't cross itself has to turn before it
+  /// can be read as a loop rather than as two arms drawn side by side — a
+  /// good half-turn more than 𑻤's chevron, which changes direction once
+  /// and so turns half a circle exactly.
+  static const double _minLoopTurn = 1.2 * math.pi;
 
   /// How much shorter 𑻶's rising arm has to be than its falling one — a
   /// short tick up before the long stroke down, rather than the balanced
@@ -571,11 +610,11 @@ class MakasarRecognizer {
   /// single-stroke letters, the self-crossing ones before 𑻨, whose plain
   /// wedge they'd otherwise be mistaken for.
   List<ScriptCharacter? Function()> _makasarClassifiers(Stroke stroke) => [
-        _classifyBa,
         _classifyMa,
+        _classifyBa,
         _classifyGa,
-        _classifyKa,
         _classifyYa,
+        _classifyKa,
         _classifyNga,
         _classifyRa,
         () => _classifyNya(stroke),
@@ -626,15 +665,15 @@ class MakasarRecognizer {
   ///
   /// Most dots first for Makasar, so a finished 𑻸 (6) isn't reported as the
   /// 𑻷 (3) hiding inside it — and for Lontara ᨐ before ᨕ, which is ᨐ short
-  /// of a dot. ᨞ is three dots much as 𑻷 is; the difference is that they
-  /// descend rather than stack (see [_classifyPallawa]).
+  /// of a dot. ᨞ is three dots much as 𑻷 is, but grouped the looser way 𑻸
+  /// is, by having been drawn together (see [_classifyPallawa]).
   ///
   /// A tap only reaches these having failed to be a vowel sign, which is
   /// what leaves room for ᨐ and ᨕ: their dots sit *within* the letter,
   /// where [_classifyDotVowel] wants -i above it and -u below it.
   List<ScriptCharacter? Function()> get _dotClassifiers => switch (_script) {
         WritingScript.makasar => [
-            () => _classifyDotColumn(6, MakasarCharacter.endOfSection),
+            () => _classifyDotRun(6, MakasarCharacter.endOfSection),
             () => _classifyDotColumn(3, MakasarCharacter.passimbang),
           ],
         WritingScript.bugis => [
@@ -647,24 +686,18 @@ class MakasarRecognizer {
           ],
       };
 
-  /// ᨞: three taps set out on a line that descends as it goes right,
-  /// rather than 𑻷's column of three stacked one under the next.
+  /// ᨞: three taps, read the way 𑻸's six are ([_dotRuns]) — asked only to
+  /// have been drawn together, near enough to each other with nothing
+  /// written in among them.
   ///
-  /// Read off where the taps ended up rather than the order they were made
-  /// in, the same way a stroke's shape is — so the run can be tapped out
-  /// from either end.
-  LontaraCharacter? _classifyPallawa() {
-    final dots = _newestDotColumn();
-    if (dots.length != 3) return null;
-    final sorted = [...dots]..sort((a, b) => a.dx.compareTo(b.dx));
-    for (var i = 1; i < sorted.length; i++) {
-      // Strictly right and strictly down, which is also what rules out a
-      // column: stacked taps share an x rather than stepping across.
-      if (sorted[i].dx <= sorted[i - 1].dx) return null;
-      if (sorted[i].dy <= sorted[i - 1].dy) return null;
-    }
-    return LontaraCharacter.pallawa;
-  }
+  /// Nothing here asks them to line up, to step across or to stack. They
+  /// are set out on a descending line in the letterform, but a mark of
+  /// three taps is the only thing three taps can be in Lontara, so where
+  /// they fall relative to each other is the hand's business rather than
+  /// the reading's. Which also means the run can be tapped out from
+  /// either end.
+  LontaraCharacter? _classifyPallawa() =>
+      _newestWith(_dotRuns()).length == 3 ? LontaraCharacter.pallawa : null;
 
   /// Records what the marks on the canvas now read as, along with their
   /// extent — which is what any vowel sign drawn next is positioned
@@ -1196,14 +1229,68 @@ class MakasarRecognizer {
   MakasarCharacter? _classifyGa() =>
       _wedgesWithMark(_isWedge, MakasarCharacter.ga);
 
-  /// 𑻥: the same double wedge as 𑻡 + a self-crossing stroke under it —
-  /// the wedge-shut-with-a-bar closing 𑻥 off, drawn in one go, so the
-  /// stroke runs back over its own start. Checked before 𑻡 because that
-  /// closed shape's own vertical direction is up-then-down like a plain
-  /// wedge's (its closing bar is too flat to split off a segment of its
-  /// own), so 𑻡 would otherwise claim it.
-  MakasarCharacter? _classifyMa() => _wedgesWithMark(
-      (stroke) => _selfIntersections(stroke) > 0, MakasarCharacter.ma);
+  /// 𑻥: the same double wedge as 𑻡 + a mark that closes on itself under
+  /// it ([_isClosedMark]) — the wedge shut with a bar that 𑻥 ends on,
+  /// drawn in one go, or the loop a hand draws in its place.
+  ///
+  /// Checked before every other letter built this way, because a closed
+  /// mark reads as an open one as soon as it's asked: which of up-down or
+  /// down-up it splits into is decided by nothing more than where the pen
+  /// started round the loop, so 𑻤 claims a circle begun at the top and 𑻡
+  /// one begun at the bottom. Closing on itself is the particular thing
+  /// about it, so it gets asked first.
+  MakasarCharacter? _classifyMa() =>
+      _wedgesWithMark(_isClosedMark, MakasarCharacter.ma);
+
+  /// Whether [stroke] closes on itself: either it crosses its own path
+  /// ([_selfIntersections]) or it comes back to where it began, the gap
+  /// between its two ends no more than [_maxClosingGap] of its own longest
+  /// side.
+  ///
+  /// The second is what a drawn circle usually is. A tail that laps its
+  /// own start along the same curve rather than across it leaves no
+  /// crossing to count, and a hand that stops a little short of its start
+  /// leaves none either — both still close the shape off, which is all
+  /// 𑻥's mark asks.
+  ///
+  /// What keeps 𑻤's chevron and its narrow bowl out is that a loop comes
+  /// the way round to where it began ([_minLoopTurn]) where those turn
+  /// through half a circle and stop; and that their ends are the mark's
+  /// own two tips, a gap the width of it rather than a fraction of it.
+  ///
+  /// Nothing here asks the loop to be round, or even upright: the one
+  /// drawn under the wedges is as often a flat box as a circle.
+  bool _isClosedMark(Stroke stroke) {
+    if (_selfIntersections(stroke) > 0) return true;
+    final bounds = _boundsOf(stroke.points);
+    if (bounds.shortestSide < _minArmExtent) return false;
+    if (_totalTurn(stroke) < _minLoopTurn) return false;
+    return (stroke.end - stroke.start).distance <=
+        bounds.longestSide * _maxClosingGap;
+  }
+
+  /// How far [stroke] turns in all, in radians: the angle between each
+  /// step and the one before it, summed with its sign so that a hand
+  /// wavering to either side cancels itself out, and taken absolute at the
+  /// end so it doesn't matter which way round the mark was drawn.
+  ///
+  /// A circle comes to 2π either way round, a chevron to about π, and a
+  /// stroke that snakes to about nothing.
+  double _totalTurn(Stroke stroke) {
+    final points = stroke.points;
+    var turn = 0.0;
+    Offset? last;
+    for (var i = 1; i < points.length; i++) {
+      final step = points[i] - points[i - 1];
+      if (step == Offset.zero) continue;
+      if (last != null) {
+        turn += math.atan2(last.dx * step.dy - last.dy * step.dx,
+            last.dx * step.dx + last.dy * step.dy);
+      }
+      last = step;
+    }
+    return turn.abs();
+  }
 
   /// The shape 𑻡, 𑻤, 𑻥, 𑻠 and 𑻬 share — and ᨎ, which is built the same
   /// way: of the 2 most recent strokes, one is the letter's wedges (a plain
@@ -1214,11 +1301,22 @@ class MakasarRecognizer {
       {bool Function(Stroke)? isTop}) {
     if (_strokes.length < 2) return null;
     final recent = _strokes.sublist(_strokes.length - 2);
-    final tops = recent.where(isTop ?? _isDoubleWedge).toList();
-    final marks = recent.where(isMark).toList();
-    if (tops.length != 1 || marks.length != 1) return null;
-    if (identical(tops.single, marks.single)) return null;
-    return _isUnder(marks.single, tops.single) ? letter : null;
+    final isWedges = isTop ?? _isDoubleWedge;
+    // Both ways round, rather than counting which strokes answer to
+    // which: a mark can be shaped like the wedges it hangs under and
+    // still be the mark — 𑻥's crosses itself, which is 𑻪's whole shape —
+    // and then counting finds two sets of wedges and no letter at all.
+    // Position decides instead, and it can only decide one way, since
+    // nothing is under itself.
+    for (final (wedges, mark) in [
+      (recent.first, recent.last),
+      (recent.last, recent.first),
+    ]) {
+      if (isWedges(wedges) && isMark(mark) && _isUnder(mark, wedges)) {
+        return letter;
+      }
+    }
+    return null;
   }
 
   /// 𑻤: the same double wedge as 𑻡 and 𑻥 + a chevron (`V`) under it.
@@ -1277,15 +1375,38 @@ class MakasarRecognizer {
     return _matchesVerticalSequence(Stroke(rightward), _hookedWedgeSequence);
   }
 
-  /// 𑻬: 𑻠 with one more wedge in its stroke — a self-crossing *triple*
-  /// wedge + an ascending line under it. Checked before 𑻫, whose lone
-  /// triple wedge is this letter's first stroke.
+  /// 𑻬: 𑻠 with one more wedge in its stroke, under the same ascending
+  /// line. It goes out to the right exactly as 𑻠 does — up, down, up —
+  /// and differs only on the way back, which rises and falls twice over
+  /// instead of once ([_isYaShaped]).
+  ///
+  /// Checked before 𑻠, and this ordering is what keeps the two apart:
+  /// [_isKaShaped] leaves the leftward half open, so it matches this
+  /// letter's stroke too and would claim it if it went first.
   MakasarCharacter? _classifyYa() => _wedgesWithMark(
         _isPlainLine,
         MakasarCharacter.ya,
-        isTop: (stroke) =>
-            _isTripleWedge(stroke) && _selfIntersections(stroke) >= 1,
+        isTop: _isYaShaped,
       );
+
+  /// The stroke 𑻬 is written with: 𑻠's own sideways turn
+  /// ([_rightThenLeftSequence]) over 𑻠's own outward profile
+  /// ([_hookedWedgeSequence]), then back left over two whole peaks — up,
+  /// down, up, down ([_doubleWedgeSequence]) — where 𑻠 comes back over
+  /// one.
+  ///
+  /// Both halves are read here, unlike [_isKaShaped]: the return is the
+  /// only thing that tells the two letters apart. How often the stroke
+  /// crosses itself is still left open.
+  bool _isYaShaped(Stroke stroke) {
+    if (!_matchesHorizontalSequence(stroke, _rightThenLeftSequence)) {
+      return false;
+    }
+    final halves = _splitByHorizontalDirectionChange(stroke);
+    return _matchesVerticalSequence(
+            Stroke(halves.first), _hookedWedgeSequence) &&
+        _matchesVerticalSequence(Stroke(halves.last), _doubleWedgeSequence);
+  }
 
   /// 𑻣: a double wedge whose last descent finishes in the top half of the
   /// stroke's own bounding box — the second peak drops only a little way
@@ -1348,22 +1469,31 @@ class MakasarRecognizer {
         : null;
   }
 
-  /// 𑻯: 𑻧's own shape, but with each of the two pieces above the base
-  /// running one way only, straight out to the right
-  /// ([_isRightwardRun]) instead of doubling back on itself.
+  /// 𑻯: two 𑻮 hooks over the base between them, the second mirrored, all
+  /// in one stroke — right, left, right, left, right
+  /// ([_rightLeftRightLeftRightSequence]), with the pen going up on the
+  /// first run and down on the second, out along the base on the third,
+  /// and up and down again on the last two.
+  ///
+  /// The base is that middle run, and it has to read as one: lying in the
+  /// bottom third of the letter ([_bottomThirdLine]) and travelling
+  /// further than it falls. That's what tells this letter from any other
+  /// five-run stroke — a hand working its way up a flight of sweeps
+  /// crosses the middle of the letter, not its foot — as well as from 𑻱,
+  /// which is 𑻯's mirror image sweep for sweep and read off which way the
+  /// pen sets out.
   MakasarCharacter? _classifyWa(Stroke stroke) {
-    final pieces = _piecesAboveBase(stroke);
-    if (pieces == null) return null;
-    return pieces.every(_isRightwardRun) ? MakasarCharacter.wa : null;
+    if (!_matchesHorizontalSequence(stroke, _rightLeftRightLeftRightSequence)) {
+      return null;
+    }
+    final base = _boundsOf(_splitByHorizontalDirectionChange(stroke)[2]);
+    return base.center.dy > _bottomThirdLine(_boundsOf(stroke.points)) &&
+            base.width > base.height
+        ? MakasarCharacter.wa
+        : null;
   }
 
-  /// Whether [stroke] runs rightward and only rightward — one horizontal
-  /// segment, travelling at least [_minArmExtent] across.
-  bool _isRightwardRun(Stroke stroke) =>
-      _splitByHorizontalDirectionChange(stroke).length == 1 &&
-      stroke.end.dx - stroke.start.dx >= _minArmExtent;
-
-  /// The two pieces 𑻧 and 𑻯 are built from: what's left of [stroke] once
+  /// The two pieces 𑻧 is built from: what's left of [stroke] once
   /// the part running through the bottom third of its own bounding box is
   /// cut away. Null unless the stroke really is two pieces standing on a
   /// base, which takes three things:
@@ -1475,21 +1605,49 @@ class MakasarRecognizer {
           ? MakasarCharacter.ja
           : null;
 
-  /// 𑻷 (3 taps) and 𑻸 (6 taps): whether the column the newest tap belongs
-  /// to is [count] taps long.
+  /// 𑻷 (3 taps): whether the column the newest tap belongs to is [count]
+  /// taps long.
   MakasarCharacter? _classifyDotColumn(int count, MakasarCharacter mark) =>
-      _newestDotColumn().length == count ? mark : null;
+      _newestWith(_dotColumns()).length == count ? mark : null;
 
-  /// Which column the most recent tap ended up in — the mark being drawn
-  /// right now, as opposed to any other still on the canvas.
-  List<Offset> _newestDotColumn() {
+  /// 𑻸 (6 taps): the same, but off the looser grouping — the letterform
+  /// sets its six taps zigzagging to either side of a centre line rather
+  /// than stacking them the way 𑻷 does, so they are asked only to have
+  /// been drawn together ([_dotRuns]).
+  MakasarCharacter? _classifyDotRun(int count, MakasarCharacter mark) =>
+      _newestWith(_dotRuns()).length == count ? mark : null;
+
+  /// Which of [groups] the most recent tap ended up in — the mark being
+  /// drawn right now, as opposed to any other still on the canvas.
+  List<Offset> _newestWith(List<List<Offset>> groups) {
     if (_dots.isEmpty) return const [];
     final newest = _dots.last;
-    for (final column in _dotColumns()) {
-      if (column.any((dot) => dot == newest)) return column;
+    for (final group in groups) {
+      if (group.any((dot) => dot == newest)) return group;
     }
     return const [];
   }
+
+  /// The taps grouped as 𑻸 wants them: sorted left to right and split
+  /// only where the run is really broken — where the next tap is further
+  /// off than [_maxDotSpacing], or where something else has been drawn
+  /// between the two ([_strokeBetween]).
+  ///
+  /// Nothing here asks a tap to line up with the one before it. 𑻸's six
+  /// don't line up with each other in the first place, and what makes
+  /// them one mark is that they were put down together with nothing in
+  /// among them — which is what this measures.
+  List<List<Offset>> _dotRuns() => _groupDots((previous, dot) =>
+      dot.dx - previous.dx <= _maxDotSpacing &&
+      !_strokeBetween(previous.dx, dot.dx));
+
+  /// Whether a stroke sits between [leftX] and [rightX] — a letter
+  /// written between two runs of taps, which makes them two marks however
+  /// close together they were drawn.
+  bool _strokeBetween(double leftX, double rightX) => _strokes.any((stroke) {
+        final centre = _boundsOf(stroke.points).center.dx;
+        return centre > leftX && centre < rightX;
+      });
 
   /// The taps on the canvas grouped into columns: sorted left to right,
   /// then split wherever a tap's drawn circle (radius [_dotRadius]) no
@@ -1504,18 +1662,23 @@ class MakasarRecognizer {
   /// down the page far more than a column of three does, and every tap
   /// still belongs to the same mark as long as it lines up with its own
   /// neighbour.
-  List<List<Offset>> _dotColumns() {
+  List<List<Offset>> _dotColumns() => _groupDots(
+      (previous, dot) => (dot.dx - previous.dx).abs() <= _dotRadius * 2);
+
+  /// The taps sorted left to right and cut into groups wherever
+  /// [belongsWith] says a tap no longer goes with the one before it.
+  List<List<Offset>> _groupDots(bool Function(Offset, Offset) belongsWith) {
     final sorted = [..._dots]..sort((a, b) => a.dx.compareTo(b.dx));
-    final columns = <List<Offset>>[];
+    final groups = <List<Offset>>[];
     for (final dot in sorted) {
-      final column = columns.isEmpty ? null : columns.last;
-      if (column != null && (dot.dx - column.last.dx).abs() <= _dotRadius * 2) {
-        column.add(dot);
+      final group = groups.isEmpty ? null : groups.last;
+      if (group != null && belongsWith(group.last, dot)) {
+        group.add(dot);
       } else {
-        columns.add([dot]);
+        groups.add([dot]);
       }
     }
-    return columns;
+    return groups;
   }
 
   /// 𑻲 (angka, the repeater): up, down and back up, with the opening
@@ -1540,22 +1703,32 @@ class MakasarRecognizer {
   }
 
   /// 𑻮: one stroke that doubles back twice sideways — right, left, right
-  /// ([_rightLeftRightSequence]) — with that opening rightward run lying
-  /// in the bottom half of the stroke's own bounding box, i.e. the letter
-  /// starts along its base and works upward from there.
+  /// ([_rightLeftRightSequence]) — one end of it running along the
+  /// letter's own base ([_hasBaseRun]).
   ///
-  /// The only letter so far read off horizontal rather than vertical
-  /// direction, so it's checked late: a stroke shaped this way has no
-  /// vertical reversal to speak of and won't have matched anything above.
-  MakasarCharacter? _classifyLa(Stroke stroke) {
-    if (!_matchesHorizontalSequence(stroke, _rightLeftRightSequence)) {
-      return null;
-    }
-    final first = _splitByHorizontalDirectionChange(stroke).first;
-    final bounds = _boundsOf(stroke.points);
-    return _boundsOf(first).center.dy > bounds.center.dy
-        ? MakasarCharacter.la
-        : null;
+  /// Read off horizontal rather than vertical direction, like 𑻯, 𑻰 and
+  /// 𑻱, so it's checked late: a stroke shaped this way has no vertical
+  /// reversal to speak of and won't have matched anything above.
+  MakasarCharacter? _classifyLa(Stroke stroke) =>
+      _isLaShaped(stroke) ? MakasarCharacter.la : null;
+
+  bool _isLaShaped(Stroke stroke) =>
+      _matchesHorizontalSequence(stroke, _rightLeftRightSequence) &&
+      _hasBaseRun(stroke);
+
+  /// Whether [stroke] has a base to it: one of its two end runs — the one
+  /// it sets off along or the one it finishes on — lying in the bottom
+  /// half of its own bounding box, rather than an arm that happens to
+  /// travel the same way partway up.
+  ///
+  /// Either end will do because either is how the letter gets written:
+  /// laying the base down and working up off it, or drawing the hook and
+  /// running the base out from under it afterwards.
+  bool _hasBaseRun(Stroke stroke) {
+    final runs = _splitByHorizontalDirectionChange(stroke);
+    final middle = _boundsOf(stroke.points).center.dy;
+    return _boundsOf(runs.first).center.dy > middle ||
+        _boundsOf(runs.last).center.dy > middle;
   }
 
   /// 𑻰: one stroke going left, right, then left again
@@ -1894,13 +2067,244 @@ class MakasarInk {
     }
     return '${character.glyph}${recognizer.vowel?.glyph ?? ''}';
   }
+
+  /// The letterforms a recognizer read, as `assets/makasar/glyphs` stems — what
+  /// gets drawn under a reading whichever script it was read in, and the
+  /// only picture there is of a New Lontara one.
+  static List<String> glyphImagesOf(MakasarRecognizer recognizer) =>
+      glyphImagesFor(
+        recognizer.script,
+        name: recognizer.character?.letterName,
+        vowel: recognizer.vowel?.vowel,
+      );
+
+  /// The same as one character: the letterform and the mark written on it,
+  /// which is what [drawGlyphClusters] takes.
+  static GlyphCluster glyphClusterOf(MakasarRecognizer recognizer) =>
+      glyphClusterFor(
+        recognizer.script,
+        name: recognizer.character?.letterName,
+        vowel: recognizer.vowel?.vowel,
+      );
+
+  /// The `sign_*` stems a vowel sign can be composed onto its letter from —
+  /// every one the character tables use, which a test holds this to. A sign
+  /// missing from it would quietly go undrawn, leaving the letter reading
+  /// as if it carried its inherent `a`.
+  static Iterable<String> get composableSigns => _signGeometry.keys;
+
+  /// How tall a letterform is drawn under a reading.
+  static const double glyphImageHeight = 34;
+
+  /// The gap left between one character and the next.
+  static const double _glyphImageGap = 8;
+
+  /// Draws [clusters] left to right with their letterforms' tops at [at],
+  /// each letter at [glyphImageHeight] and its own width, inked in the same
+  /// colour the marks are so the reading and what drew it match.
+  ///
+  /// A vowel sign is drawn **on** its letter, at the place the letter's own
+  /// size puts it — above, below, in front or behind ([_placeMark]) — so a
+  /// syllable is one picture and a written row reads as a word. Drawn side
+  /// by side instead, as the images come, ki would read as ka followed by
+  /// a mark on an empty circle.
+  ///
+  /// One still being decoded takes no room rather than shifting the rest
+  /// along: they come in within a frame or two of being asked for, and a
+  /// row that settles into place reads better than one that slides.
+  static void drawGlyphClusters(
+    Canvas canvas,
+    List<GlyphCluster> clusters,
+    Offset at,
+  ) {
+    final paint = Paint()
+      ..colorFilter = const ColorFilter.mode(color, BlendMode.srcIn)
+      ..filterQuality = FilterQuality.medium;
+    var x = at.dx;
+    for (final cluster in clusters) {
+      final laid = _layOut(cluster, at.dy);
+      if (laid == null) continue;
+      // The whole character is moved as one, so a mark reaching out in
+      // front of its letter (-e) isn't cut off at the start of the row.
+      final shift = Offset(x - laid.bounds.left, 0);
+      canvas.drawImageRect(
+        laid.letter,
+        laid.letterSource,
+        laid.letterBox.shift(shift),
+        paint,
+      );
+      final sign = laid.sign;
+      if (sign != null) {
+        canvas.drawImageRect(
+          sign,
+          laid.markSource!,
+          laid.markBox!.shift(shift),
+          paint,
+        );
+      }
+      x += laid.bounds.width + _glyphImageGap;
+    }
+  }
+
+  /// How far above and below the letterforms a row of [clusters] reaches —
+  /// the room its vowel signs need, which is nothing until one is drawn.
+  /// The scenes ask before painting, so the reading above the row is lifted
+  /// only by as much as the marks actually take.
+  static ({double above, double below}) glyphClusterOverhang(
+    List<GlyphCluster> clusters,
+  ) {
+    var above = 0.0, below = 0.0;
+    for (final cluster in clusters) {
+      final laid = _layOut(cluster, 0);
+      if (laid == null) continue;
+      above = math.max(above, -laid.bounds.top);
+      below = math.max(below, laid.bounds.bottom - glyphImageHeight);
+    }
+    return (above: above, below: below);
+  }
+
+  /// One character laid out with the letter band's top at [top] and the
+  /// character's left edge at 0 — null while the letterform is still being
+  /// decoded, or when there is no letterform to draw (angka, or nothing
+  /// read).
+  ///
+  /// Every letterform image is drawn on the same grid, whichever of the two
+  /// sizes the file is: the letter sits in [_letterBox] on it, which is the
+  /// very box the `sign_*` images draw their dotted circle in. So a mark
+  /// needs no placing — drawn at its own place on that grid it lands on the
+  /// letter correctly, whatever letter it is. All that is left to do is
+  /// leave the circle out (only [_SignGeometry.mark] is drawn), crop the
+  /// margins off (each image's own [GlyphImages.inkOf]), and scale the grid
+  /// so a letter stands [glyphImageHeight] tall.
+  static _LaidOutCluster? _layOut(GlyphCluster cluster, double top) {
+    final letterName = cluster.letter;
+    if (letterName == null) return null;
+    final letter = GlyphImages.of(letterName);
+    final ink = GlyphImages.inkOf(letterName);
+    if (letter == null || ink == null) return null;
+
+    // The whole grid at the size that makes [_letterBox] stand
+    // [glyphImageHeight] tall — so letters keep their sizes relative to
+    // each other rather than all being squeezed to one height.
+    final gridHeight = glyphImageHeight / _letterBox.height;
+    final gridWidth = gridHeight * letter.width / letter.height;
+    Rect place(Rect on) => Rect.fromLTRB(
+          on.left * gridWidth,
+          top + (on.top - _letterBox.top) * gridHeight,
+          on.right * gridWidth,
+          top + (on.bottom - _letterBox.top) * gridHeight,
+        );
+
+    final letterBox = place(ink);
+    final signName = cluster.vowel;
+    final sign = signName == null ? null : GlyphImages.of(signName);
+    final geometry = signName == null ? null : _signGeometry[signName];
+    if (sign == null || geometry == null) {
+      return _LaidOutCluster(letter, _pixels(letter, ink), letterBox, null,
+          null, null, letterBox);
+    }
+    final markBox = place(geometry.mark);
+    return _LaidOutCluster(
+      letter,
+      _pixels(letter, ink),
+      letterBox,
+      sign,
+      _pixels(sign, geometry.mark),
+      markBox,
+      letterBox.expandToInclude(markBox),
+    );
+  }
+
+  /// A box given as fractions of [image], in that image's own pixels.
+  static Rect _pixels(ui.Image image, Rect fractions) => Rect.fromLTRB(
+        fractions.left * image.width,
+        fractions.top * image.height,
+        fractions.right * image.width,
+        fractions.bottom * image.height,
+      );
 }
+
+/// Where a letter sits on the grid the letterform images share, as
+/// fractions of one — and so also where the `sign_*` images put the dotted
+/// circle that stands in for it. Measured off the assets, which draw every
+/// character to the same layout at one of two resolutions.
+const Rect _letterBox = Rect.fromLTRB(0.396, 0.336, 0.608, 0.692);
+
+/// One character as it is drawn: the letterform's `assets/makasar/glyphs`
+/// stem, and the vowel sign written on it. Either may be missing — nothing
+/// read, no sign on it, or a character with no image of it (angka).
+typedef GlyphCluster = ({String? letter, String? vowel});
+
+/// A character ready to paint: its letterform, where that goes, and the
+/// vowel sign cropped out of its `sign_*` image and placed on it. The boxes
+/// are all in canvas coordinates bar the two sources, which are in their
+/// own image's pixels.
+class _LaidOutCluster {
+  const _LaidOutCluster(
+    this.letter,
+    this.letterSource,
+    this.letterBox,
+    this.sign,
+    this.markSource,
+    this.markBox,
+    this.bounds,
+  );
+
+  final ui.Image letter;
+
+  /// The part of the letterform image that is ink — the margins around it
+  /// are what would set a row of characters wide apart.
+  final Rect letterSource;
+  final Rect letterBox;
+  final ui.Image? sign;
+
+  /// The part of the `sign_*` image that is the mark itself — the dotted
+  /// circle beside it stands in for the letter and is left out.
+  final Rect? markSource;
+  final Rect? markBox;
+
+  /// Letter and mark together, which is what the row advances by.
+  final Rect bounds;
+}
+
+/// Where the mark sits in each `sign_*` image, as fractions of it —
+/// measured off the assets themselves.
+///
+/// The rest of the image is the dotted circle standing in for the letter
+/// the mark attaches to. It is never drawn: the letter itself is there
+/// instead, in the very box the circle occupies ([_letterBox]).
+class _SignGeometry {
+  const _SignGeometry(this.mark);
+
+  /// The mark itself, which is all that gets drawn.
+  final Rect mark;
+}
+
+const _signGeometry = <String, _SignGeometry>{
+  // The dot above.
+  'sign_i': _SignGeometry(Rect.fromLTRB(0.392, 0.137, 0.452, 0.233)),
+  // The dot below.
+  'sign_u': _SignGeometry(Rect.fromLTRB(0.572, 0.733, 0.628, 0.829)),
+  // The hook in front of the letter…
+  'sign_e': _SignGeometry(Rect.fromLTRB(0.260, 0.397, 0.384, 0.842)),
+  // …and the one behind it.
+  'sign_o': _SignGeometry(Rect.fromLTRB(0.620, 0.390, 0.848, 0.842)),
+  // Lontara's own, a hook above — drawn on the smaller of the two image
+  // sizes, which is the same grid at half the resolution.
+  'sign_ae': _SignGeometry(Rect.fromLTRB(0.458, 0.000, 0.542, 0.286)),
+};
 
 /// A whole canvas given over to one character: collects marks, hands them
 /// to a single [MakasarRecognizer], and draws them with the readout of
 /// what they came to underneath.
 class MakasarLayer extends Layer {
   final MakasarRecognizer recognizer = MakasarRecognizer();
+
+  /// Every finished mark, in the order it was drawn — kept so the last one
+  /// can be taken back ([undo]). The recognizer sorts each mark into a
+  /// stroke or a tap as it arrives and has no memory of which came last,
+  /// so the order is the layer's to hold.
+  final List<List<Offset>> _marks = [];
   List<Offset>? _activePoints;
 
   /// See [MakasarRecognizer.recognizedNamesFor] /
@@ -1919,11 +2323,32 @@ class MakasarLayer extends Layer {
   /// [MakasarRecognizer.script].
   set script(WritingScript script) {
     recognizer.script = script;
+    _marks.clear();
     _activePoints = null;
   }
 
   void clear() {
     recognizer.clear();
+    _marks.clear();
+    _activePoints = null;
+  }
+
+  /// Drops the mark drawn most recently and reads the character again.
+  ///
+  /// Read again from the marks that are left rather than unpicked: a
+  /// reading is made of whatever is on the paper at the time, and taking a
+  /// mark away can leave what remains reading as something else entirely —
+  /// 𑻥 without its loop is nothing, 𑻸 without its sixth tap is 𑻷.
+  ///
+  /// Does nothing on an empty canvas, so the button offering it needn't
+  /// know whether there is anything to take back.
+  void undo() {
+    if (_marks.isEmpty) return;
+    _marks.removeLast();
+    recognizer.clear();
+    for (final mark in _marks) {
+      recognizer.addMark(mark);
+    }
     _activePoints = null;
   }
 
@@ -1934,6 +2359,7 @@ class MakasarLayer extends Layer {
     } else if (event is PointerMoveEvent && _activePoints != null) {
       _activePoints!.add(event.localPosition);
     } else if (event is PointerUpEvent && _activePoints != null) {
+      _marks.add(_activePoints!);
       recognizer.addMark(_activePoints!);
       _activePoints = null;
     }
@@ -1951,7 +2377,8 @@ class MakasarLayer extends Layer {
     final character = recognizer.character;
     final vowel = recognizer.vowel;
     // Empty for a Lontara reading, which has no font to be shown in — the
-    // description below carries it on its own there, so it goes unbracketed.
+    // letterform drawn under the text carries it there, and the
+    // description goes unbracketed beside it.
     final glyphs = MakasarInk.glyphsOf(recognizer);
     final description = character == null || character.sound == null
         ? character?.letterName ?? ''
@@ -1986,7 +2413,25 @@ class MakasarLayer extends Layer {
             ),
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: size.width - 48);
-    label.paint(canvas, Offset(24, size.height - 24 - label.height));
+
+    // The letterform sits under the text, along the foot of the page, and
+    // the text is lifted to make room for it — so the reading reads down:
+    // what it is, then what it looks like drawn. A vowel sign is part of
+    // that letterform rather than a second picture beside it, so what is
+    // drawn for ka plus the -i mark is ki.
+    final clusters = [MakasarInk.glyphClusterOf(recognizer)];
+    final overhang = MakasarInk.glyphClusterOverhang(clusters);
+    final glyphTop =
+        size.height - 24 - overhang.below - MakasarInk.glyphImageHeight;
+    if (clusters.first.letter == null) {
+      label.paint(canvas, Offset(24, size.height - 24 - label.height));
+      return;
+    }
+    label.paint(
+      canvas,
+      Offset(24, glyphTop - overhang.above - 8 - label.height),
+    );
+    MakasarInk.drawGlyphClusters(canvas, clusters, Offset(24, glyphTop));
   }
 }
 
